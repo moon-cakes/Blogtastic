@@ -1,0 +1,2 @@
+# Blogtastic
+A blogging system
