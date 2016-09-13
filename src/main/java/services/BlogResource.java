@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,8 +17,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
@@ -38,12 +42,61 @@ import domain.User;
  *
  */
 
-@Path("/users")
+@Path("/users") 
 public class BlogResource {
 	
 	private static final Logger _logger = LoggerFactory.getLogger(BlogResource.class);
-	protected static EntityManagerFactory _factory = null;
-	protected static EntityManager _entityManager = null;
+	public static EntityManagerFactory _factory = Persistence.createEntityManagerFactory("blogPU");;
+	public static EntityManager _entityManager = _factory.createEntityManager();
+	
+	
+	/*
+	 *  The methods below handles cookies. 
+	 *  Reference: http://memorynotfound.com/jaxrs-cookieparam-crud-example/
+	 */
+	
+	// Get a new cookie
+	@GET
+	@Path("/login")
+	@Produces("application/xml")
+	public Response login(@CookieParam("username") String cookie) {
+	    return Response.ok().build();
+	}
+	
+	// Create a new cookie
+	@POST
+	public Response createCookie(){
+	    return Response
+	            .ok()
+	            .cookie(new NewCookie("username", "value"))
+	            .build();
+	}
+	
+	// Update a cookkie
+	@PUT
+	public Response updateCookie(@CookieParam("name") Cookie cookie){
+	    if (cookie != null){
+	        return Response
+	                .ok()
+	                .cookie(new NewCookie("name", "new-value"))
+	                .build();
+	    }
+	    return Response.ok().build();
+	}
+	
+	// Delete a cookie
+	@DELETE
+	public Response deleteCookie(@CookieParam("name") Cookie cookie){
+	    if (cookie != null){
+	        NewCookie newCookie = new NewCookie(cookie, "delete cookie", 0, false);
+	        return Response
+	                .ok()
+	                .cookie(newCookie)
+	                .build();
+	    }
+	    return Response.ok().build();
+	}
+	
 	
 	/**
 	 * Add a new user to the system
@@ -54,21 +107,13 @@ public class BlogResource {
 	@POST
 	@Consumes("application/xml")
 	public Response createUser(User user) throws ClassNotFoundException, SQLException{
-		
-		DatabaseUtility.openDatabase();
-		
-		EntityManagerFactory _factory = Persistence.createEntityManagerFactory("blogPU");
-		EntityManager _entityManager = _factory.createEntityManager();
+
 		_entityManager.getTransaction().begin();
-		
 		_logger.info("Read user: " + user);
 		//persist user to db
 		_entityManager.persist(user);
 		_logger.info("Created user: " + user);
-		
 		_entityManager.getTransaction().commit();
-		_entityManager.close();
-		DatabaseUtility.closeDatabase();
 		
 		// Return a Response that specifies a status code of 201 Created along
 		// with the Location header set to URI of the newly created User.
@@ -84,10 +129,12 @@ public class BlogResource {
 	@POST
 	@Path("{user-id}/blog")
 	@Consumes("application/xml")
-	public Response createBlogForUser(@PathParam("user-id") long id,
-			Blog blog){
+	public Response createBlogForUser(@CookieParam("username") long cookieUserId, 
+			@PathParam("user-id") long id, Blog blog){
+		
 		return Response.created(URI.create("/users/" + id + "/" + blog.get_id()))
 				.build();
+		
 	}
 	
 	/**
@@ -100,41 +147,59 @@ public class BlogResource {
 	@Consumes("application/xml")
 	public Response createBlogEntryForBlog(@PathParam("user-id") long user_id,
 			@PathParam("blog-id") long blog_id, BlogEntry entry){
+		
+		
 		return Response.created(URI.create("/users/" + user_id + "/" + 
 				blog_id + "/" + entry.get_id()))
 				.build();
+		
 	}
 	
 	@POST
 	@Path("{user-id}/blogs-following")
 	@Consumes("application/xml")
 	public void addFollowing(@PathParam("user-id") long user_id,
-			Blog blog){
-		
-		
+			Blog blog){	
 	}
 	
-/*	*//**
-	 * Update an existing registered user.
+	/**
+	 * Update a user's details
 	 * @param user
-	 *//*
+	 */
 	@PUT
 	@Path("{user-id}")
 	@Consumes("application/xml")
 	public void updateUser(User user){
-		User user_update = findUser(user.get_id());
-		user_update.set_firstname(user.get_firstname());
-		user_update.set_lastname(user.get_lastname());
+		
+		_entityManager.getTransaction().begin();
+		User user_to_update = _entityManager.find(User.class, user.get_id());
+		_entityManager.getTransaction().commit();
+		user_to_update.set_firstname(user.get_firstname());
+		user_to_update.set_lastname(user.get_lastname());
+		
 	}
+
 	
+	/**
+	 * Retrieve a user
+	 * @param user_id
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	@GET
 	@Path("{user-id}")
 	@Produces("application/xml")
-	public User getUser(@PathParam("user-id") long user_id){
+	public User getUser(@PathParam("user-id") long user_id) throws 
+		ClassNotFoundException, SQLException{
+
+		_entityManager.getTransaction().begin();
+		_logger.info("Trying to find user with user id: " + String.valueOf(user_id));
+		User user = _entityManager.find(User.class, user_id);
+		_logger.info("Found user " + user);
+		_entityManager.getTransaction().commit();
 		
 		return user;
-	}*/
-
-	
+	}
 
 }

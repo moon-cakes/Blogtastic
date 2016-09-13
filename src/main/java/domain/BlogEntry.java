@@ -7,13 +7,11 @@ import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -32,12 +30,9 @@ import org.joda.time.format.DateTimeFormatter;
 
 
 /**
- * Entity class to represent a blog entry.
+ * Entity class to represent a blog entry. A blog entry has a title, a timestamp,
+ * and may or may not have any comments.
  * @author Xiaohui
- * 
- * Blog entries and category are related using a many-to-many association.
- * A blog entry can belong to many categories and and a category can have 
- * many blog entries.
  *
  */
 @Entity
@@ -66,15 +61,10 @@ public class BlogEntry implements Comparable<BlogEntry>{
     
 	// Set up the collection of comments for a blog entry as a Set.
 	@ElementCollection
-	@CollectionTable(name="COMMENT")
+	@CollectionTable(name="COMMENT", joinColumns = @JoinColumn(name = "BLOGENTRY_ID"))
 	@XmlElementWrapper(name="comments")
 	@XmlElement(name="comment")
 	private Set<Comment> _comments = new HashSet<Comment>();
-	
-	@ManyToMany(mappedBy= "_blogentries")
-	@XmlElementWrapper(name="categories")
-	@XmlElement(name="category")
-	private Set<Category> _categories = new HashSet<Category>( );
 	
 	@XmlElement(name="time")
 	private DateTime _timestamp;
@@ -111,10 +101,6 @@ public class BlogEntry implements Comparable<BlogEntry>{
 
 	public void set_timestamp(DateTime _timestamp) {
 		this._timestamp = _timestamp;
-	}
-
-	public Set<Category> get_categories() {
-		return _categories;
 	}
 	
 	public Blog get_blog() {

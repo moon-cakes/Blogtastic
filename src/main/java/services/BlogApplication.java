@@ -1,5 +1,6 @@
 package services;
 
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ public class BlogApplication extends Application {
 	 private Set<Object> singletons = new HashSet<Object>();
 	 private Set<Class<?>> classes = new HashSet<Class<?>>();
 	 
-	   public BlogApplication()
+	   public BlogApplication() throws ClassNotFoundException, SQLException
 	   {
 	      singletons.add(new BlogResource());
 	      classes.add(BlogResolver.class);

@@ -67,21 +67,36 @@ public class Blog {
 	@XmlElement(name="entry")
 	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();
 	
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinTable(name="BLOG_CATEGORY", joinColumns = @JoinColumn(name = "BLOG_ID"),
+	inverseJoinColumns = @JoinColumn(name = "CATEGORY"))
+	private Category _category;
+	
 	// Define the many-to-many association with user. The association is implemented
 	// using an intermediary join table. Cascading persistence is set so that
 	// whenever a Blog instance is persisted, so are its subscribers.
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "BLOG_SUBSCRIBERS", joinColumns = @JoinColumn(name = "BLOG_ID"), inverseJoinColumns = @JoinColumn(name = "USER_ID"))
+	@JoinTable(name = "BLOG_SUBSCRIBERS", joinColumns = @JoinColumn(name = "BLOG_ID"), 
+	inverseJoinColumns = @JoinColumn(name = "USER_ID"))
 	@XmlElementWrapper(name="subscribers")
 	@XmlElement(name="subscriber")
 	private Set<User> _subscribers = new HashSet<User>();
 	
 	protected Blog(){
+	}
+	
+	public Blog(String blogname, User blogowner){
+	 	_blogname = blogname;
+	 	_blogowner = blogowner;
     }
     
-    public Blog(User blogowner, String blogname) {
-    	_blogowner = blogowner;
+    public Blog(String blogname, Set<BlogEntry> blogentries, 
+    		Category category, Set<User> subscribers ) {
     	_blogname = blogname;
+    	_blogentries = blogentries;
+    	_category = category;
+    	_subscribers = subscribers;
     }
 
 	public Long get_id() {

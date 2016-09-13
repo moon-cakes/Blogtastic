@@ -43,11 +43,15 @@ public class User {
     @XmlAttribute(name="id")
     private Long _id;
    
+    @Column(name="USERNAME", nullable=false, length=30)
+    @XmlElement(name="username")
+    public String _username;
+    
     @Column(name="FIRSTNAME", nullable=false, length=30)
     @XmlElement(name="first-name")
     private String _firstname;
     
-    @Column(name="LASTNAME", nullable =false, length=30)
+    @Column(name="LASTNAME", nullable=false, length=30)
     @XmlElement(name="last-name")
     private String _lastname;
 	
@@ -67,9 +71,10 @@ public class User {
     protected User(){
     }
     
-    public User(String lastname, String firstname){
+    public User(String lastname, String firstname, String username){
     	_firstname = firstname;
     	_lastname = lastname;
+    	_username = username;
     }
     
     public User(String lastname, String firstname, Set<Blog> blogs, Set<Blog> following) {
@@ -115,6 +120,23 @@ public class User {
 		return Collections.unmodifiableSet(_following);
 	}
 
+	@Override
+	public String toString(){
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("User: { [");
+		buffer.append(_id);
+		buffer.append("]; ");
+		if(_lastname != null) {
+			buffer.append(_lastname);
+			buffer.append(", ");
+		}
+		if(_firstname != null) {
+			buffer.append(_firstname);
+		}
+		buffer.append(" }");
+		return buffer.toString();
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof User))

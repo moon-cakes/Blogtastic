@@ -7,12 +7,12 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Entity class to define categories for blog entries. 
  * 
- * Category and BlogEntry are related using a many-to-many association. A blog entry 
- * can belong to many categories, and one category can contain many blog entries.
+ * Category and Blogs are related using an optional many-to-one association.
+ * A category can contain many blogs or nonne but a blog may or may not contain a category.
  *
  * @author Xiaohui
  */
@@ -46,11 +46,10 @@ public class Category {
 	@XmlElement(name="name")
 	private String _name;
     
-	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "CATEGORY_ITEM", joinColumns = @JoinColumn(name = "CATEGORY_ID"), inverseJoinColumns = @JoinColumn(name = "ITEM_ID"))
-	@XmlElementWrapper(name="entries")
-	@XmlElement(name="entry")
-	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();
+	@OneToMany(mappedBy = "_category", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+	@XmlElementWrapper(name="blogs")
+	@XmlElement(name="blog")
+	private Set<Blog> _blogs = new HashSet<Blog>();
 	
 	protected Category(){
 	}
@@ -61,9 +60,9 @@ public class Category {
 
 	private static Logger _logger = LoggerFactory.getLogger(Category.class);
 	
-	public void addBlogEntries(BlogEntry blogentry) {
-		_logger.info("Attempting to add: " + blogentry.toString());
-		_blogentries.add(blogentry);
+	public void addBlog(Blog blog) {
+		_logger.info("Attempting to add: " + blog.toString());
+		_blogs.add(blog);
 	}
     
     public Long get_id() {
@@ -74,8 +73,8 @@ public class Category {
 		return _name;
 	}
 
-	public Set<BlogEntry> get_blogentries() {
-		return Collections.unmodifiableSet(_blogentries);
+	public Set<Blog> get_blogs() {
+		return Collections.unmodifiableSet(_blogs);
 	}
 	
 	@Override
