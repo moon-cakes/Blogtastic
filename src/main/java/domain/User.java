@@ -45,9 +45,12 @@ public class User {
     @XmlAttribute(name="id")
     private Long _id;
    
+    @XmlID
+    @XmlAttribute(name="xml-user-id")
+    private String XMLID;
+    
     @Column(name="USERNAME", nullable=false, length=30)
     @XmlElement(name="username")
-    @XmlID
     private String _username;
     
     @Column(name="FIRSTNAME", nullable=false, length=30)
@@ -62,9 +65,9 @@ public class User {
 	// up on class Blog's _blogowner property. It's the Blog class that's responsible for
     // the foreign key column introduced by the @ManyToOne annotation.
 	@OneToMany(mappedBy = "_blogowner", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+	@XmlIDREF
 	@XmlElementWrapper(name="blogs")
 	@XmlElement(name="blog")
-	@XmlIDREF
 	private Set<Blog> _blogs = new HashSet<Blog>();
 	
 	@XmlElementWrapper(name="following-blogs")

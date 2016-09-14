@@ -21,6 +21,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -45,6 +47,10 @@ public class Blog {
     @XmlAttribute(name="id")
     private Long _id;
     
+    @XmlID
+    @XmlAttribute(name="xml-blog-id")
+    private String XMLID;
+    
     @Column(name="BLOGNAME", nullable=false, length=30)
     @XmlElement(name="blog-name")
     private String _blogname;
@@ -55,6 +61,7 @@ public class Blog {
 	@ManyToOne(fetch=FetchType.LAZY)
 	// Make the association mandatory - a Blog MUST be owned by a user.
 	@JoinColumn(name="USER_ID", nullable=false)
+	@XmlIDREF
 	@XmlElement(name="blog-owner")
 	protected User _blogowner;
 	

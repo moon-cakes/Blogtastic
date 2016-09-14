@@ -42,6 +42,8 @@
 			<artifactId>resteasy-jaxb-provider</artifactId>
 			<version>3.0.12.Final</version>
 		</dependency>
+
+		
 		<!-- JUnit. -->
 		<dependency>
 			<groupId>junit</groupId>

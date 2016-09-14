@@ -1,22 +1,15 @@
 package blog.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.CookieStore;
-import java.net.HttpCookie;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
@@ -30,8 +23,7 @@ import org.slf4j.LoggerFactory;
 import domain.Blog;
 import domain.Category;
 import domain.User;
-import services.BlogResource;
-import services.DatabaseUtility;
+import services.PersistenceManager;
 
 public class BlogResourceTest {
 
@@ -52,7 +44,7 @@ public class BlogResourceTest {
 		_client = ClientBuilder.newClient();
 	}
 	
-	//@Before
+	@Before
 	public void reloadServerData() {
 		/*Response response = _client
 				.target(WEB_SERVICE_URI).request()
@@ -81,7 +73,7 @@ public class BlogResourceTest {
 	 */
 	@Test
 	public void addUser() {
-		
+		_logger.info("tooodoo" + WEB_SERVICE_URI + "/users");
 		user = new User("Lin", "Amy", "xlin504");
 		Response response = _client
 				.target(WEB_SERVICE_URI + "/users").request()
@@ -139,8 +131,9 @@ public class BlogResourceTest {
 	/**
 	 * Create a new blog for an already existing user
 	 */
-	@Test 
+	//@Test 
 	public void createNewBlog(){
+		
 		blog = new Blog("Amy's Life", user);
 		
 		Response response = _client
@@ -168,7 +161,7 @@ public class BlogResourceTest {
 	/**
 	 * Create another blog for the same existing user
 	 */
-	@Test 
+	//@Test 
 	public void createSecondaryBlog(){
 		
 		blog = new Blog("Amy's Makeup Tutorials", user);
