@@ -18,6 +18,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -45,7 +47,8 @@ public class User {
    
     @Column(name="USERNAME", nullable=false, length=30)
     @XmlElement(name="username")
-    public String _username;
+    @XmlID
+    private String _username;
     
     @Column(name="FIRSTNAME", nullable=false, length=30)
     @XmlElement(name="first-name")
@@ -61,6 +64,7 @@ public class User {
 	@OneToMany(mappedBy = "_blogowner", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	@XmlElementWrapper(name="blogs")
 	@XmlElement(name="blog")
+	@XmlIDREF
 	private Set<Blog> _blogs = new HashSet<Blog>();
 	
 	@XmlElementWrapper(name="following-blogs")

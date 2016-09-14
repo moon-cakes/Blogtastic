@@ -16,7 +16,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -89,6 +88,7 @@ public class Blog {
 	public Blog(String blogname, User blogowner){
 	 	_blogname = blogname;
 	 	_blogowner = blogowner;
+	 	_blogowner.addBlog(this);
     }
     
     public Blog(String blogname, Set<BlogEntry> blogentries, 
@@ -130,6 +130,23 @@ public class Blog {
 	public Set<User> get_subscribers() {
 		return Collections.unmodifiableSet(_subscribers);
 	}
+	
+	@Override
+	public String toString(){
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("Blog: { [");
+		buffer.append(_id);
+		buffer.append("]; \"");
+		if(_blogname != null) {
+			buffer.append(_blogname + " \" ");
+			buffer.append(", ");
+		}
+		if(_blogowner != null) {
+			buffer.append("blog owner: " + _blogowner);
+		}
+		buffer.append(" }");
+		return buffer.toString();
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -141,8 +158,8 @@ public class Blog {
         Blog rhs = (Blog) obj;
         return new EqualsBuilder().
             append(_id, rhs.get_id()).
-            append(_blogowner, rhs.get_id()).
-            append(_blogname, rhs.get_id()).
+        /*    append(_blogowner, rhs.get_id()).
+            append(_blogname, rhs.get_id()).*/
             isEquals();
 	}
     
@@ -151,8 +168,8 @@ public class Blog {
 		return new HashCodeBuilder(17, 31).
 				append(getClass().getName()).
 				append(_id).
-				append(_blogowner).
-				append(_blogname).
+			/*	append(_blogowner).
+				append(_blogname).*/
 				toHashCode();
 	}
 

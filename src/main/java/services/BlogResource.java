@@ -2,6 +2,10 @@ package services;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -32,11 +36,14 @@ import org.slf4j.LoggerFactory;
 
 import domain.Blog;
 import domain.BlogEntry;
+import domain.Category;
 import domain.User;
+
 /**
  * 
- * Web service resource implementation for the blog application. An instance
- * of this class handles all HTTP requests for the blogging Web service.
+ * Web service resource implementation for blogging specific functionality. An instance
+ * of this class handles all HTTP requests related to user creation, blog creation,
+ * and blog entries creation.
  * 
  * @author Xiaohui
  *
@@ -46,9 +53,10 @@ import domain.User;
 public class BlogResource {
 	
 	private static final Logger _logger = LoggerFactory.getLogger(BlogResource.class);
-	public static EntityManagerFactory _factory = Persistence.createEntityManagerFactory("blogPU");;
-	public static EntityManager _entityManager = _factory.createEntityManager();
+/*	public static EntityManagerFactory _factory = Persistence.createEntityManagerFactory("blogPU");;
+	public static EntityManager _entityManager = _factory.createEntityManager();*/
 	
+	private EntityManager _entityManager = PersistenceManager.instance().createEntityManager();
 	
 	/*
 	 *  The methods below handles cookies. 
@@ -56,7 +64,7 @@ public class BlogResource {
 	 */
 	
 	// Get a new cookie
-	@GET
+/*	@GET
 	@Path("/login")
 	@Produces("application/xml")
 	public Response login(@CookieParam("username") String cookie) {
@@ -95,8 +103,7 @@ public class BlogResource {
 	                .build();
 	    }
 	    return Response.ok().build();
-	}
-	
+	}*/
 	
 	/**
 	 * Add a new user to the system
@@ -132,7 +139,13 @@ public class BlogResource {
 	public Response createBlogForUser(@CookieParam("username") long cookieUserId, 
 			@PathParam("user-id") long id, Blog blog){
 		
-		return Response.created(URI.create("/users/" + id + "/" + blog.get_id()))
+		_entityManager.getTransaction().begin();
+		_logger.info("Read blog: " + blog);
+		_entityManager.persist(blog);
+		_logger.info("Created blog: " + blog);
+		_entityManager.getTransaction().commit();
+		
+		return Response.created(URI.create("/users/" + id + "/blog/" + blog.get_id()))
 				.build();
 		
 	}
@@ -143,14 +156,14 @@ public class BlogResource {
 	 * @param entry	a blog entry
 	 */
 	@POST
-	@Path("{user-id}/{blog-id}/blogentry")
+	@Path("{user-id}/blog/{blog-id}/entry")
 	@Consumes("application/xml")
 	public Response createBlogEntryForBlog(@PathParam("user-id") long user_id,
 			@PathParam("blog-id") long blog_id, BlogEntry entry){
 		
 		
-		return Response.created(URI.create("/users/" + user_id + "/" + 
-				blog_id + "/" + entry.get_id()))
+		return Response.created(URI.create("/users/" + user_id + "/blog/" + 
+				blog_id + "/entry/" + entry.get_id()))
 				.build();
 		
 	}
@@ -180,13 +193,13 @@ public class BlogResource {
 	}
 
 	
-	/**
-	 * Retrieve a user
-	 * @param user_id
-	 * @return
-	 * @throws ClassNotFoundException
-	 * @throws SQLException
-	 */
+/**
+ * Retrieve a user
+ * @param user_id
+ * @return
+ * @throws ClassNotFoundException
+ * @throws SQLException
+ */
 	@GET
 	@Path("{user-id}")
 	@Produces("application/xml")
@@ -200,6 +213,54 @@ public class BlogResource {
 		_entityManager.getTransaction().commit();
 		
 		return user;
+	}
+	
+	/**
+	 * Retrieve a specific blog for a user
+	 * @param user_id
+	 * @param blog_id
+	 * @return
+	 */
+	@GET
+	@Path("{user-id}/blog/{blog-id}")
+	@Produces("application/xml")
+	public Blog getUsersBlog(@PathParam("user-id") long user_id, @PathParam("blog-id") long blog_id){
+		
+		_entityManager.getTransaction().begin();
+		_logger.info("Trying to find blog with blog id: " + String.valueOf(blog_id)
+				+ "with user id: " + String.valueOf(user_id));
+		Blog blog = _entityManager.find(Blog.class, blog_id);
+		_logger.info("Found blog: " + blog);
+		_entityManager.getTransaction().commit();
+		
+		return blog;
+	}
+	
+	/**
+	 * Retrieve a list of blogs owned by a user
+	 * @param user_id
+	 * @return
+	 */
+	@GET
+	@Path("{user-id}/blog")
+	@Produces("application/xml")
+	public Response getUsersBlogs(@PathParam("user-id") long user_id){
+		
+		_entityManager.getTransaction().begin();
+		_logger.info("Trying to find blogs owned by user with user id: " + String.valueOf(user_id));
+		List<Blog> usersBlogsResults = _entityManager.createQuery("SELECT blogs FROM Blog blogs WHERE"
+				+ " USER_ID = :user_id",  
+                Blog.class)
+                .setParameter("user_id", user_id)
+                .getResultList();
+		for (Blog blog:usersBlogsResults){
+			_logger.info("Found blogs" + blog);
+		}
+		_entityManager.getTransaction().commit();
+		//GenericEntity<List<Blog>> userBlogsGE = new GenericEntity<List<Blog>>(usersBlogsResults){};
+		Set<Blog> usersBlogs = new HashSet<Blog>(usersBlogsResults);
+		GenericEntity<Set<Blog>> usersBlogsGE = new GenericEntity<Set<Blog>>(usersBlogs){};
+		return Response.ok(usersBlogsGE).build();
 	}
 
 }

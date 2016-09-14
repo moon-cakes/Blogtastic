@@ -12,12 +12,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 @Entity
 @Table(name = "CATEGORIES") 
+@XmlRootElement(name="category")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Category {
 
@@ -69,12 +70,33 @@ public class Category {
 		return _id;
 	}
 
+	public void set_id(Long _id) {
+		this._id = _id;
+	}
+
 	public String get_name() {
 		return _name;
 	}
 
 	public Set<Blog> get_blogs() {
 		return Collections.unmodifiableSet(_blogs);
+	}
+	
+	@Override
+	public String toString(){
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("Category: { ");
+		//buffer.append(_id);
+		//buffer.append("]; ");
+		if(_name != null) {
+			buffer.append(_name);
+			//buffer.append(", ");
+		}
+		/*if(_firstname != null) {
+			buffer.append(_firstname);
+		}*/
+		buffer.append(" }");
+		return buffer.toString();
 	}
 	
 	@Override
