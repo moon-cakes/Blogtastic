@@ -34,7 +34,7 @@ public class BlogResolver implements ContextResolver<JAXBContext> {
 			// The JAXB Context should be able to marshal and unmarshal the
 			// specified classes.
 			_context = JAXBContext.newInstance(User.class, Blog.class,
-					BlogEntry.class, Category.class, Comment.class);
+					BlogEntry.class, Comment.class);
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}
@@ -43,7 +43,7 @@ public class BlogResolver implements ContextResolver<JAXBContext> {
 	@Override
 	public JAXBContext getContext(Class<?> type) {
 		if (type.equals(User.class) || type.equals(Blog.class)
-				|| type.equals(BlogEntry.class) || type.equals(Category.class) 
+				|| type.equals(BlogEntry.class)
 				|| type.equals(Comment.class)) {
 			return _context;
 		} else {

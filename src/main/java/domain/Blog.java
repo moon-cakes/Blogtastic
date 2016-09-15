@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -16,12 +17,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -41,10 +43,17 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Blog {
 	
+	private static int NEXT_ID = 0;
+	
     @Id 
-    @GeneratedValue(generator="ID_GENERATOR")
+    //@GeneratedValue(generator="ID_GENERATOR")
+    @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
+    
+   // @XmlID
+    @XmlAttribute(name="xml-blog-id")
+    private String _xmlId;
     
     @Column(name="BLOGNAME", nullable=false, length=30)
     @XmlElement(name="blog-name")
@@ -56,16 +65,17 @@ public class Blog {
 	@ManyToOne(fetch=FetchType.LAZY)
 	// Make the association mandatory - a Blog MUST be owned by a user.
 	@JoinColumn(name="USER_ID", nullable=false)
+	//@XmlIDREF
 	@XmlElement(name="blog-owner")
 	protected User _blogowner;
 	
-	// Map the collection of blog entries. The inverse many-to-one relationship is set
+/*	// Map the collection of blog entries. The inverse many-to-one relationship is set
 	// up on class blog entries _blog property. It's the BlogEntry's class that is
 	// responsible for the foreign key column introduced by the @ManyToOne relationship.
 	@OneToMany(mappedBy = "_blog", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	@XmlElementWrapper(name="entries")
 	@XmlElement(name="entry")
-	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();
+	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();*/
 	
 	
 	@ManyToOne(fetch=FetchType.LAZY)
@@ -89,12 +99,24 @@ public class Blog {
 	public Blog(String blogname, User blogowner){
 	 	_blogname = blogname;
 	 	_blogowner = blogowner;
+	 	//_blogowner.addBlog(this);
+	 	NEXT_ID++;
+		_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
     
+	public Blog(String blogname, User blogowner, Category cat){
+	 	_blogname = blogname;
+	 	_blogowner = blogowner;
+	 	//_blogowner.addBlog(this);
+	 	_category = cat;
+	 	NEXT_ID++;
+		_xmlId = getClass().getName() + ":" + NEXT_ID;
+    }
+	
     public Blog(String blogname, Set<BlogEntry> blogentries, 
     		Category category, Set<User> subscribers ) {
     	_blogname = blogname;
-    	_blogentries = blogentries;
+    	//_blogentries = blogentries;
     	_category = category;
     	_subscribers = subscribers;
     }
@@ -119,16 +141,40 @@ public class Blog {
 		return _blogname;
 	}
 	
-    public Set<BlogEntry> get_blogentries() {
+    /*public Set<BlogEntry> get_blogentries() {
 		return Collections.unmodifiableSet(_blogentries);
-	}
+	}*/
 
-    public void addBlogEntry(BlogEntry entry){
+   /* public void addBlogEntry(BlogEntry entry){
 		_blogentries.add(entry);
 	}
-    
+    */
 	public Set<User> get_subscribers() {
 		return Collections.unmodifiableSet(_subscribers);
+	}
+	
+	@Override
+	public String toString(){
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("Blog: { [");
+		buffer.append(_id);
+		buffer.append("]; \"");
+		if(_blogname != null) {
+			buffer.append(_blogname + " \" ");
+			buffer.append(", ");
+		}
+		if(_blogowner != null) {
+			buffer.append("owned by " + _blogowner);
+			buffer.append(", ");
+		}
+		if(_category != null) {
+			buffer.append(/*"category: " +*/_category);
+		} 
+		if(_category == null) {
+			buffer.append("none");
+		} 
+		buffer.append(" }");
+		return buffer.toString();
 	}
 
 	@Override
@@ -141,8 +187,8 @@ public class Blog {
         Blog rhs = (Blog) obj;
         return new EqualsBuilder().
             append(_id, rhs.get_id()).
-            append(_blogowner, rhs.get_id()).
-            append(_blogname, rhs.get_id()).
+        /*    append(_blogowner, rhs.get_id()).
+            append(_blogname, rhs.get_id()).*/
             isEquals();
 	}
     
@@ -151,8 +197,8 @@ public class Blog {
 		return new HashCodeBuilder(17, 31).
 				append(getClass().getName()).
 				append(_id).
-				append(_blogowner).
-				append(_blogname).
+			/*	append(_blogowner).
+				append(_blogname).*/
 				toHashCode();
 	}
 

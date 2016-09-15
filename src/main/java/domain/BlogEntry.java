@@ -10,6 +10,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -23,7 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -42,7 +42,8 @@ import org.joda.time.format.DateTimeFormatter;
 public class BlogEntry implements Comparable<BlogEntry>{
 
     @Id
-    @GeneratedValue(generator="ID_GENERATOR")
+    //@GeneratedValue(generator="ID_GENERATOR")
+    @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
 

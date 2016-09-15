@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
@@ -18,6 +19,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -37,15 +40,22 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 @XmlRootElement(name="user")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class User {
+	
+	private static int NEXT_ID = 0;
 
     @Id 
-    @GeneratedValue(generator="ID_GENERATOR")
+    //@GeneratedValue(generator="ID_GENERATOR")
+    @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
    
+    //@XmlID
+    @XmlAttribute(name="xml-user-id")
+    private String _xmlId;
+    
     @Column(name="USERNAME", nullable=false, length=30)
     @XmlElement(name="username")
-    public String _username;
+    private String _username;
     
     @Column(name="FIRSTNAME", nullable=false, length=30)
     @XmlElement(name="first-name")
@@ -55,13 +65,14 @@ public class User {
     @XmlElement(name="last-name")
     private String _lastname;
 	
-	// Map the collection of blogs of a user. The inverse many-to-one relationship is set
+/*	// Map the collection of blogs of a user. The inverse many-to-one relationship is set
 	// up on class Blog's _blogowner property. It's the Blog class that's responsible for
     // the foreign key column introduced by the @ManyToOne annotation.
 	@OneToMany(mappedBy = "_blogowner", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+	@XmlIDREF
 	@XmlElementWrapper(name="blogs")
 	@XmlElement(name="blog")
-	private Set<Blog> _blogs = new HashSet<Blog>();
+	private Set<Blog> _blogs = new HashSet<Blog>();*/
 	
 	@XmlElementWrapper(name="following-blogs")
 	@XmlElement(name="blog")
@@ -75,12 +86,15 @@ public class User {
     	_firstname = firstname;
     	_lastname = lastname;
     	_username = username;
+		NEXT_ID++;
+		_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
+
     
     public User(String lastname, String firstname, Set<Blog> blogs, Set<Blog> following) {
     	_firstname = firstname;
     	_lastname = lastname;
-    	_blogs = blogs;
+    	//_blogs = blogs;
     	_following = following;
     }
 	
@@ -108,13 +122,13 @@ public class User {
     	_lastname = lastname;
     }
     
-    public void addBlog(Blog blog){
+/*    public void addBlog(Blog blog){
     	_blogs.add(blog);
     }
     
 	public Set<Blog> get_blogs() {
 		return Collections.unmodifiableSet(_blogs);
-	}
+	}*/
 
 	public Set<Blog> get_following() {
 		return Collections.unmodifiableSet(_following);

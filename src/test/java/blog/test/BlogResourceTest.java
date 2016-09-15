@@ -1,21 +1,17 @@
 package blog.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.CookieStore;
-import java.net.HttpCookie;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.junit.AfterClass;
@@ -26,24 +22,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import domain.Blog;
+import domain.Category;
 import domain.User;
-import services.BlogResource;
-import services.DatabaseUtility;
+import services.PersistenceManager;
 
 public class BlogResourceTest {
 
-	private static String WEB_SERVICE_URI = "http://localhost:10000/services/users";
+	private static String WEB_SERVICE_URI = "http://localhost:10000/services";
 
 	private Logger _logger = LoggerFactory.getLogger(BlogResourceTest.class);
 	
 	private static Client _client;
+	
+	private static User user;
+	
+	private static Blog blog1;
+	
+	private static Blog blog2;
+	
+	private static Category category;
 	
 	@BeforeClass
 	public static void setUpClient() {
 		_client = ClientBuilder.newClient();
 	}
 	
-	//@Before
+	@Before
 	public void reloadServerData() {
 		/*Response response = _client
 				.target(WEB_SERVICE_URI).request()
@@ -72,27 +76,61 @@ public class BlogResourceTest {
 	 */
 	@Test
 	public void addUser() {
-		
-		User amy = new User("Lin", "Amy", "xlin504");
+
+		user = new User("Lin", "Amy", "xlin504");
 		Response response = _client
-				.target(WEB_SERVICE_URI).request()
+				.target(WEB_SERVICE_URI + "/users").request()
 				.cookie("username", "xlin504")
-				.post(Entity.xml(amy));
+				.post(Entity.xml(user));
 		if (response.getStatus() != 201) {
 			fail("Failed to create new User");
 		}
 		
 		String location = response.getLocation().toString();
 		response.close();
-		_logger.info("location: " + location);
+		_logger.info("location for newly created user: " + location);
 		
-		User amyFromService = _client.
+		User userFromService = _client.
 				target(location).request().
 				accept("application/xml").
 				get(User.class);
 		
-		assertEquals(amy.get_firstname(), amyFromService.get_firstname());
-		assertEquals(amy.get_lastname(), amyFromService.get_lastname());
+		//user.set_id(userFromService.get_id());
+		
+		/*assertEquals(user.get_firstname(), userFromService.get_firstname());
+		assertEquals(user.get_lastname(), userFromService.get_lastname());*/
+		
+		assertEquals(Long.valueOf(1), userFromService.get_id());
+	}
+	
+	/**
+	 * Create some categories
+	 */
+	
+	@Test
+	public void addCategoy(){
+		
+		category = new Category("Lifestyle");
+		Response response = _client
+				.target(WEB_SERVICE_URI + "/categories").request()
+				.post(Entity.xml(category));
+		if (response.getStatus() != 201) {
+			fail("Failed to create new category");
+		}
+		
+		String location = response.getLocation().toString();
+		response.close();
+		_logger.info("location for newly created category: " + location);
+		
+		Category categoryFromService = _client.
+				target(location).request().
+				accept("application/xml").
+				get(Category.class);
+		
+		//category.set_id(categoryFromService.get_id());
+		
+		assertEquals(Long.valueOf(1), categoryFromService.get_id());
+		//assertEquals(category.get_name(), categoryFromService.get_name());
 	}
 	
 	/**
@@ -100,35 +138,78 @@ public class BlogResourceTest {
 	 */
 	@Test 
 	public void createNewBlog(){
-		 CookieManager manager = new CookieManager();
-		 try {
-	        manager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-	        CookieHandler.setDefault(manager);
-
-	        // get content from URLConnection;
-	        // cookies are set by web site
-	        URL url = new URL("http://localhost:10000");
-	        URLConnection connection = url.openConnection();
-	        connection.getContent();
-
-	        // get cookies from underlying
-	        // CookieStore
-	        CookieStore cookieJar =  manager.getCookieStore();
-	        List <HttpCookie> cookies =
-	            cookieJar.getCookies();
-	        for (HttpCookie cookie: cookies) {
-	          _logger.info("CookieHandler retrieved cookie: " + cookie);
-	        }
-	    } catch(Exception e) {
-	    	 _logger.info("Unable to get cookie using CookieHandler");
-	        e.printStackTrace();
-	    }
 		
-/*		User user = _client.
+		Category categoryFromService = _client.
+				target(WEB_SERVICE_URI + "/categories/1").request().
+				accept("application/xml").
+				get(Category.class);
+
+		user.set_id(1);
+		blog1 = new Blog("Amy's Life", user, categoryFromService);
+		
+		Response response = _client
+				.target(WEB_SERVICE_URI + "/users/" + user.get_id() + "/blog").request()
+				.post(Entity.xml(blog1));
+		if (response.getStatus() != 201) {
+			fail("Failed to create new blog for user: " + user);
+		}
+		
+		String location = response.getLocation().toString();
+		response.close();
+		_logger.info("location for newly created blog: " + location + " for user: " +user);
+		
+		Blog blogFromService = _client.
 				target(location).request().
 				accept("application/xml").
-				get(User.class);
-		Blog blog = new Blog("Amy's Life", user);*/
+				get(Blog.class);
+		
+		//blogFromService.set_id(blogFromService.get_id());
+		
+		assertEquals(Long.valueOf(1), blogFromService.get_id());
+		//assertEquals(blog1.get_blogname(), blogFromService.get_blogname());
+	}
+	
+	/**
+	 * Create another blog for the same existing user
+	 */
+	@Test 
+	public void createSecondaryBlog(){
+		
+		blog2 = new Blog("Amy's Makeup Tutorials", user);
+		
+		Response response = _client
+				.target(WEB_SERVICE_URI  + "/users/" + user.get_id() + "/blog").request()
+				.post(Entity.xml(blog2));
+		if (response.getStatus() != 201) {
+			fail("Failed to create new blog for user: " + user);
+		}
+		
+		String location = response.getLocation().toString();
+		response.close();
+		_logger.info("location for newly created blog: " + location + " for user: " + user);
+		
+		/*Response responseFromRetrievingBlogs = _client.
+				target(WEB_SERVICE_URI  + "/users/" + user.get_id() + "/blog" ).request().
+				accept("application/xml").
+				get();
+		
+		Set<Blog> blogsFromService = (Set<Blog>) responseFromRetrievingBlogs.getEntity();*/
+		Set<Blog> blogsFromService = _client.
+				target(WEB_SERVICE_URI  + "/users/" + user.get_id() + "/blog" ).request().
+				accept("application/xml").
+				get(new GenericType<Set<Blog>>(){});
+		
+		blog1.set_id(1);
+		blog2.set_id(2);
+		
+		Set<Blog> blogsFromClient = new HashSet<Blog>();
+		blogsFromClient.add(blog1);
+		blogsFromClient.add(blog2);
+		
+		_logger.info("blogs from client: " + blogsFromClient);
+		_logger.info("blogs from service: " + blogsFromService);
+		assertEquals(blogsFromClient, blogsFromService);
+	
 		
 	}
 	
