@@ -17,6 +17,7 @@ public class BlogApplication extends Application {
 	   public BlogApplication() throws ClassNotFoundException, SQLException
 	   {
 	      singletons.add(new BlogResource());
+	      //singletons.add(new CategoryResource());
 	      classes.add(BlogResolver.class);
 	   }
 
