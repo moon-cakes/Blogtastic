@@ -70,21 +70,26 @@ public class BlogEntry implements Comparable<BlogEntry>{
 	@XmlElement(name="time")
 	private DateTime _timestamp;
 	
+	@Column(name="CONTENT", nullable=false, length=30)
+	@XmlElement(name="content")
+	private String _content;
+	
 	protected BlogEntry(){
 	}
 	
-    public BlogEntry(DateTime timestamp, Blog blog, String posttitle) {
+    public BlogEntry(DateTime timestamp, String posttitle, String content, 
+    		Blog blog) {
        	_timestamp = timestamp;
-    	_blog = blog;
     	_posttitle = posttitle;
-
+    	_content = content;
+       	_blog = blog;
     }
     
     public Long get_id() {
 		return _id;
 	}
 
-    public void set_id(Long id){
+    public void set_id(long id){
     	_id = id;
     }
     
@@ -126,7 +131,7 @@ public class BlogEntry implements Comparable<BlogEntry>{
 	}
 	
 	public Set<Comment> getComments() {
-		// Wrap the Set of Image objects with a wrapper that provides read-only
+		// Wrap the Set of Comment objects with a wrapper that provides read-only
 		// access. Clients thus can't change the state of the returned Set.
 		return Collections.unmodifiableSet(_comments);
 	}
@@ -172,8 +177,23 @@ public class BlogEntry implements Comparable<BlogEntry>{
 		DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 		DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HH:mm");
 		
-		
 		StringBuffer buffer = new StringBuffer();
+		buffer.append("BlogEntry: { ");
+		buffer.append("\"" + _posttitle);
+		buffer.append("\" was posted at");
+		buffer.append(timeFormatter.print(_timestamp));
+		buffer.append(" on ");
+		buffer.append(dateFormatter.print(_timestamp));
+		buffer.append(", Content: ");
+		buffer.append(_content);
+		buffer.append("Comments: ");
+		if (!_comments.isEmpty()){
+		buffer.append("Comments: ");
+		} else {
+			buffer.append(" None");
+		}
+		buffer.append(" }");
+		
 		return buffer.toString();
 	}
 }

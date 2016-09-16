@@ -163,6 +163,11 @@ public class BlogResource {
 	public Response createBlogEntryForBlog(@PathParam("user-id") long user_id,
 			@PathParam("blog-id") long blog_id, BlogEntry entry){
 		
+		_entityManager.getTransaction().begin();
+		_logger.info("Read blog entry: " + entry);
+		_entityManager.persist(entry);
+		_logger.info("Created blog entry: " + entry);
+		_entityManager.getTransaction().commit();
 		
 		return Response.created(URI.create("/users/" + user_id + "/blog/" + 
 				blog_id + "/entry/" + entry.get_id()))

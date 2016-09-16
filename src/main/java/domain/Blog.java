@@ -77,7 +77,6 @@ public class Blog {
 	@XmlElement(name="entry")
 	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();*/
 	
-	
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinTable(name="BLOG_CATEGORY", joinColumns = @JoinColumn(name = "BLOG_ID"),
 	inverseJoinColumns = @JoinColumn(name = "CATEGORY"))
@@ -160,7 +159,7 @@ public class Blog {
 		buffer.append(_id);
 		buffer.append("]; \"");
 		if(_blogname != null) {
-			buffer.append(_blogname + " \" ");
+			buffer.append(_blogname + "\" ");
 			buffer.append(", ");
 		}
 		if(_blogowner != null) {

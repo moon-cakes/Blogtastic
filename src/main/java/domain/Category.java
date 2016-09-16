@@ -87,7 +87,7 @@ public class Category {
 	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("Category: { ");
+		buffer.append("Category: ");
 		//buffer.append(_id);
 		//buffer.append("]; ");
 		if(_name != null) {
@@ -97,7 +97,6 @@ public class Category {
 		/*if(_firstname != null) {
 			buffer.append(_firstname);
 		}*/
-		buffer.append(" }");
 		return buffer.toString();
 	}
 	
