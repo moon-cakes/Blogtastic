@@ -40,18 +40,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 @XmlRootElement(name="user")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class User {
-	
-	private static int NEXT_ID = 0;
 
     @Id 
     //@GeneratedValue(generator="ID_GENERATOR")
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
-   
-    //@XmlID
-    @XmlAttribute(name="xml-user-id")
-    private String _xmlId;
     
     @Column(name="USERNAME", nullable=false, length=30)
     @XmlElement(name="username")
@@ -65,15 +59,6 @@ public class User {
     @XmlElement(name="last-name")
     private String _lastname;
 	
-/*	// Map the collection of blogs of a user. The inverse many-to-one relationship is set
-	// up on class Blog's _blogowner property. It's the Blog class that's responsible for
-    // the foreign key column introduced by the @ManyToOne annotation.
-	@OneToMany(mappedBy = "_blogowner", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-	@XmlIDREF
-	@XmlElementWrapper(name="blogs")
-	@XmlElement(name="blog")
-	private Set<Blog> _blogs = new HashSet<Blog>();*/
-	
 	@XmlElementWrapper(name="following-blogs")
 	@XmlElement(name="blog")
 	@ManyToMany(mappedBy= "_subscribers")
@@ -86,8 +71,8 @@ public class User {
     	_firstname = firstname;
     	_lastname = lastname;
     	_username = username;
-		NEXT_ID++;
-		_xmlId = getClass().getName() + ":" + NEXT_ID;
+		//NEXT_ID++;
+		//_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
 
     
@@ -134,6 +119,10 @@ public class User {
 		return Collections.unmodifiableSet(_following);
 	}
 
+	public void add_to_following(Blog blog) {
+		_following.add(blog);
+	}
+	
 	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();

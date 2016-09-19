@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import domain.Blog;
 import domain.Category;
 import domain.User;
 
@@ -31,6 +32,13 @@ public class CategoryResource {
 	private static final Logger _logger = LoggerFactory.getLogger(BlogResource.class);
 	private EntityManager _entityManager = PersistenceManager.instance().createEntityManager();
 	
+	/**
+	 * Add a new category
+	 * @param category
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	@POST
 	@Consumes("application/xml")
 	public Response createCategory(Category category) throws ClassNotFoundException, SQLException{
@@ -48,6 +56,13 @@ public class CategoryResource {
 				.build();
 	}
 	
+	/**
+	 * Retrieve a category 
+	 * @param cat_id
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	@GET
 	@Path("{category-id}")
 	@Produces("application/xml")
@@ -62,4 +77,5 @@ public class CategoryResource {
 		return cat;
 	}
 	
+
 }

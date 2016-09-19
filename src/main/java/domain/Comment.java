@@ -3,14 +3,17 @@ package domain;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 
 /**
@@ -20,27 +23,26 @@ import org.joda.time.DateTime;
  */
 @Embeddable
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name="comment")
 public class Comment {
-	
-    @GeneratedValue(generator="ID_GENERATOR")
-    @XmlAttribute(name="id")
-    private Long _id;
-    
-    @Column(name="AUTHOR", nullable=false, length=30)
+
+	@Column(name="AUTHOR", nullable=false)
     @XmlElement(name="author")
     private String _author;
     
-    @Column(name="COMMENT", nullable=false, length=30)
+    @Column(name="COMMENT", nullable=false)
     @XmlElement(name="comment-content")
     private String _comment;
     
 	@XmlElement(name="time")
+	//@Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
+	//@Type(type="org.joda.time.contrib.hibernate.PersistentDateTime")
 	private DateTime _timestamp;
 	
     protected Comment(){
     }
     
-    public Comment(String author, String comment, DateTime time) {
+    public Comment(DateTime time, String author, String comment) {
     	_author = author;
     	_comment = comment;
     	_timestamp = time;
@@ -52,6 +54,14 @@ public class Comment {
 
 	public String get_comment() {
 		return _comment;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(_author + " said: ");
+		buffer.append(_comment);
+		return buffer.toString();
 	}
 	
 	@Override

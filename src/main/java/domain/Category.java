@@ -49,10 +49,10 @@ public class Category {
 	@XmlElement(name="name")
 	private String _name;
     
-	@OneToMany(mappedBy = "_category", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+/*	@OneToMany(mappedBy = "_category", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	@XmlElementWrapper(name="blogs")
 	@XmlElement(name="blog")
-	private Set<Blog> _blogs = new HashSet<Blog>();
+	private Set<Blog> _blogs = new HashSet<Blog>();*/
 	
 	protected Category(){
 	}
@@ -65,7 +65,7 @@ public class Category {
 	
 	public void addBlog(Blog blog) {
 		_logger.info("Attempting to add: " + blog.toString());
-		_blogs.add(blog);
+		//_blogs.add(blog);
 	}
     
     public Long get_id() {
@@ -80,9 +80,9 @@ public class Category {
 		return _name;
 	}
 
-	public Set<Blog> get_blogs() {
+/*	public Set<Blog> get_blogs() {
 		return Collections.unmodifiableSet(_blogs);
-	}
+	}*/
 	
 	@Override
 	public String toString(){

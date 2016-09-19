@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * Entity class to represent a blog.
@@ -43,19 +45,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Blog {
 	
-	private static int NEXT_ID = 0;
-	
     @Id 
     //@GeneratedValue(generator="ID_GENERATOR")
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
     
-   // @XmlID
-    @XmlAttribute(name="xml-blog-id")
-    private String _xmlId;
-    
-    @Column(name="BLOGNAME", nullable=false, length=30)
+    @Column(name="BLOGNAME", nullable=false)
     @XmlElement(name="blog-name")
     private String _blogname;
 	
@@ -65,7 +61,7 @@ public class Blog {
 	@ManyToOne(fetch=FetchType.LAZY)
 	// Make the association mandatory - a Blog MUST be owned by a user.
 	@JoinColumn(name="USER_ID", nullable=false)
-	//@XmlIDREF
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	@XmlElement(name="blog-owner")
 	protected User _blogowner;
 	
@@ -78,8 +74,9 @@ public class Blog {
 	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();*/
 	
 	@ManyToOne(fetch=FetchType.LAZY)
-	@JoinTable(name="BLOG_CATEGORY", joinColumns = @JoinColumn(name = "BLOG_ID"),
-	inverseJoinColumns = @JoinColumn(name = "CATEGORY"))
+	//@JoinTable(name="BLOG_CATEGORY", joinColumns = @JoinColumn(name = "BLOG_ID"),
+	//inverseJoinColumns = @JoinColumn(name = "CATEGORY"))
+	@JoinColumn(name="CATEGORY_ID")
 	private Category _category;
 	
 	// Define the many-to-many association with user. The association is implemented
@@ -98,18 +95,12 @@ public class Blog {
 	public Blog(String blogname, User blogowner){
 	 	_blogname = blogname;
 	 	_blogowner = blogowner;
-	 	//_blogowner.addBlog(this);
-	 	NEXT_ID++;
-		_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
     
 	public Blog(String blogname, User blogowner, Category cat){
 	 	_blogname = blogname;
 	 	_blogowner = blogowner;
-	 	//_blogowner.addBlog(this);
 	 	_category = cat;
-	 	NEXT_ID++;
-		_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
 	
     public Blog(String blogname, Set<BlogEntry> blogentries, 
@@ -152,10 +143,14 @@ public class Blog {
 		return Collections.unmodifiableSet(_subscribers);
 	}
 	
+	public void add_subscribers(User user) {
+		_subscribers.add(user);
+	}
+	
 	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("Blog: { [");
+		buffer.append("{ [");
 		buffer.append(_id);
 		buffer.append("]; \"");
 		if(_blogname != null) {
