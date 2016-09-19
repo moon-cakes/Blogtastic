@@ -91,7 +91,7 @@ public class BlogResourceTest {
 		assertEquals(Long.valueOf(4), categoryFromService.get_id());
 
 	}
-	
+
 	/**
 	 * Add a new user (Amy) to the system, send a request a cookie
 	 */
@@ -114,27 +114,27 @@ public class BlogResourceTest {
 
 		assertEquals(Long.valueOf(6), userFromService.get_id());
 	}
-	
+
 	/**
 	 * Update user Simon Cowell
 	 */
 	@Test
 	public void updateUserDetails() {
-		
-		User simon = _client.target(WEB_SERVICE_URI + "/users/2").request().accept("application/xml")
-				.get(User.class);
-		
+
+		User simon = _client.target(WEB_SERVICE_URI + "/users/2").request()
+				.accept("application/xml").get(User.class);
+
 		simon.set_lastname("Phillip Cowell");
-		
+
 		Response response = _client.target(WEB_SERVICE_URI + "/users/2").request()
 				.put(Entity.xml(simon));
 		if (response.getStatus() != 204)
 			fail("Failed to update CriminalProfile");
 		response.close();
-		
+
 		User simonUpdated = _client.target(WEB_SERVICE_URI + "/users/2").request()
 				.accept("application/xml").get(User.class);
-		
+
 		assertEquals(simon, simonUpdated);
 	}
 
@@ -189,8 +189,8 @@ public class BlogResourceTest {
 		Blog blog = _client.target(WEB_SERVICE_URI + "/users/3/blog/2").request()
 				.accept("application/xml").get(Blog.class);
 
-		BlogEntry entry = new BlogEntry(new DateTime(), "Why Battlefield is Fun",
-				content, blog);
+		BlogEntry entry = new BlogEntry(new DateTime(), "Why Battlefield is Fun", content,
+				blog);
 
 		Response response = _client.target(WEB_SERVICE_URI + "/users/3/blog/2/entry").request()
 				.post(Entity.xml(entry));
@@ -257,7 +257,8 @@ public class BlogResourceTest {
 
 		// Get only the first blog under the gaming category (by default), the
 		// web service should return with a Next link, but not a previous link.
-		// The first blog in the blogs table with the gaming category has an id of #2
+		// The first blog in the blogs table with the gaming category has an id
+		// of #2
 		assertEquals(Long.valueOf(1), Long.valueOf(blogs.size()));
 		assertEquals(Long.valueOf(2), Long.valueOf(blogs.get(0).get_id()));
 		assertNull(previous);
@@ -275,13 +276,18 @@ public class BlogResourceTest {
 		_logger.info(previous.toString());
 		_logger.info("Next to string: ");
 		_logger.info(next.toString());
-		// The second blog with category id of 3 should be returned along with Previous and 
+		// The second blog with category id of 3 should be returned along with
+		// Previous and
 		// next links to the adjacent blogs.
 		assertEquals(Long.valueOf(1), Long.valueOf(blogs.size()));
 		assertEquals(Long.valueOf(3), Long.valueOf(blogs.get(0).get_id()));
-		assertEquals("<" + WEB_SERVICE_URI + "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
+		assertEquals(
+				"<" + WEB_SERVICE_URI
+						+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
 				previous.toString());
-		assertNotNull("<" + WEB_SERVICE_URI + "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
+		assertNotNull(
+				"<" + WEB_SERVICE_URI
+						+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
 				next.toString());
 	}
 
@@ -297,6 +303,8 @@ public class BlogResourceTest {
 		Response response = _client.target(WEB_SERVICE_URI + "/users/1/blog/1").request()
 				.post(Entity.xml(user));
 
+		int status = response.getStatus();
+		response.close();
 	}
 
 	/**
@@ -309,34 +317,92 @@ public class BlogResourceTest {
 		Response response = _client.target(WEB_SERVICE_URI + "/users/login").request()
 				.cookie("username", "bboo123").accept("application/xml").get();
 
-		if (response.getStatus() == 200) {
+		int status = response.getStatus();
+		response.close();
+		if (status == 200) {
 			System.out.println("Response: " + response.readEntity(String.class));
 		}
 
 	}
 
 	/**
-	 * Delete user Betty Boo
+	 * Delete user Simon Cowell
 	 */
-	// @Test
+	@Test
 	public void deleteUser() {
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/1").request().delete();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/2").request().delete();
 		int status = response.getStatus();
-		if (status != 404) {
+		response.close();
+		if (status != 204) {
 			_logger.error("Failed to delete User; Web service responsed with: " + status);
 			fail();
 		}
 
 		// check to see if Betty Boo is deleted
-		response = _client.target(WEB_SERVICE_URI + "/users/1").request().get();
+		response = _client.target(WEB_SERVICE_URI + "/users/2").request().get();
 		status = response.getStatus();
+		response.close();
 		if (status != 404) {
 			_logger.error("Expecting a status code of 404 for querying a non-existent User; "
 					+ "Web service responded with: " + status);
 			fail();
 		}
+	}
 
+	/**
+	 * Delete blog with id 3 "GET_RIGHT's Game Guide to CS:GO"
+	 */
+	//@Test
+	public void deleteBlog() {
+		
+		Response response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3")
+				.request().delete();
+		int status = response.getStatus();
+		response.close();
+		if (status != 204) {
+			_logger.error("Failed to delete blog; Web service responsed with: " + status);
+			fail();
+		}
+
+		// check to see if blog "GET_RIGHT'S Game Guide" is deleted
+		response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3").request().get();
+		status = response.getStatus();
+		response.close();
+		if (status != 404) {
+			_logger.error("Expecting a status code of 404 for querying a non-existent blog; "
+					+ "Web service responded with: " + status);
+			fail();
+		}
+		
+	}
+	
+	
+	/**
+	 * Delete blog entry with id 3 "DE_DUST II Strats", comment associated with id 3 should also be
+	 * deleted
+	 */
+	//@Test
+	public void deleteBlogEntry() {
+
+		Response response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3")
+				.request().delete();
+		int status = response.getStatus();
+		response.close();
+		if (status != 204) {
+			_logger.error("Failed to delete entry; Web service responsed with: " + status);
+			fail();
+		}
+
+		// check to see if blog entry "DE_DUST II Strats" is deleted
+		response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3").request().get();
+		status = response.getStatus();
+		response.close();
+		if (status != 404) {
+			_logger.error("Expecting a status code of 404 for querying a non-existent entry; "
+					+ "Web service responded with: " + status);
+			fail();
+		}
 	}
 
 }
