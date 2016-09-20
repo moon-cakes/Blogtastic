@@ -2,9 +2,11 @@ package services;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,15 +58,23 @@ import domain.User;
 @Path("/users")
 public class BlogResource {
 
-	private static final Logger _logger = LoggerFactory.getLogger(BlogResource.class);
+	private static final Logger _logger = LoggerFactory
+			.getLogger(BlogResource.class);
 	/*
 	 * public static EntityManagerFactory _factory =
 	 * Persistence.createEntityManagerFactory("blogPU");; public static
 	 * EntityManager _entityManager = _factory.createEntityManager();
 	 */
 
-	private EntityManager _entityManager = PersistenceManager.instance().createEntityManager();
-	protected Map<Long, AsyncResponse> _responses = new HashMap<Long, AsyncResponse>();
+	private EntityManager _entityManager = PersistenceManager.instance()
+			.createEntityManager();
+
+	/*
+	 * protected Map<Long, AsyncResponse> _responses = new HashMap<Long,
+	 * AsyncResponse>();
+	 */
+
+	Map<Long, List<AsyncResponse>> _responses = new HashMap<Long, List<AsyncResponse>>();
 
 	public BlogResource() {
 		reloadDatabase();
@@ -92,21 +102,28 @@ public class BlogResource {
 
 		Blog blog = new Blog("Betty's Music Posts", user, category);
 		Blog blog2 = new Blog("Kelvin's Gaming Blog", user3, category3);
-		Blog blog3 = new Blog("GET_RIGHT's Game Guide to CS:GO", user4, category3);
-		Blog blog4 = new Blog("PASHA_BICEPS's Game Guide to CS:GO", user5, category3);
+		Blog blog3 = new Blog("GET_RIGHT's Game Guide to CS:GO", user4,
+				category3);
+		Blog blog4 = new Blog("PASHA_BICEPS's Game Guide to CS:GO", user5,
+				category3);
 
-		BlogEntry entry = new BlogEntry(new DateTime(), "Inspiration Behind My Latest Song",
-				"It was my mom...", blog);
+		BlogEntry entry = new BlogEntry(new DateTime(),
+				"Inspiration Behind My Latest Song", "It was my mom...", blog);
 		Comment comment = new Comment(new DateTime(), "Anonymous", "Cool");
 		entry.addComment(comment);
 
-		BlogEntry entry2 = new BlogEntry(new DateTime(), "CS:GO smokes",
+		BlogEntry entry2 = new BlogEntry(
+				new DateTime(),
+				"CS:GO smokes",
 				"All videos come with a timecode for all grenade throws. "
 						+ "See end of guide for basic grenade throw types and settings used.",
 				blog3);
 
-		BlogEntry entry3 = new BlogEntry(new DateTime(), "DE_DUST II Strats", "Rush B", blog4);
-		Comment comment2 = new Comment(new DateTime(), "Anonymous",
+		BlogEntry entry3 = new BlogEntry(new DateTime(), "DE_DUST II Strats",
+				"Rush B", blog4);
+		Comment comment2 = new Comment(
+				new DateTime(),
+				"Anonymous",
 				"I hate rushing B unless you have a good spawn for it. It's too easy for the CT's to defend.");
 		entry3.addComment(comment2);
 
@@ -151,14 +168,16 @@ public class BlogResource {
 		_logger.info("Trying to find user with username " + username);
 		try {
 			User user = _entityManager
-					.createQuery("SELECT user FROM User user WHERE user._username = :username",
-							User.class)
-					.setParameter("username", username).getSingleResult();
+					.createQuery(
+							"SELECT user FROM User user WHERE user._username = :username",
+							User.class).setParameter("username", username)
+					.getSingleResult();
 			_logger.info("Found user " + user);
 			_entityManager.getTransaction().commit();
 
-			return Response.ok().build();
-
+			//return Response.ok().build();
+			return Response.ok(username).build();
+			
 		} catch (ObjectNotFoundException e) {
 
 			_logger.info("User doesn't exist in the database");
@@ -180,53 +199,28 @@ public class BlogResource {
 
 	}
 
-	/*
-	 * * // Update a cookkie
-	 * 
-	 * @PUT public Response updateCookie(@CookieParam("name") Cookie cookie){ if
-	 * (cookie != null){ return Response .ok() .cookie(new NewCookie("name",
-	 * "new-value")) .build(); } return Response.ok().build(); }
-	 * 
-	 * // Delete a cookie
-	 * 
-	 * @DELETE public Response deleteCookie(@CookieParam("name") Cookie cookie){
-	 * if (cookie != null){ NewCookie newCookie = new NewCookie(cookie,
-	 * "delete cookie", 0, false); return Response .ok() .cookie(newCookie)
-	 * .build(); } return Response.ok().build(); }
-	 */
-
 	/**
 	 * Subscribe to a blog
 	 * 
 	 * @param blogId
 	 * @param response
 	 */
+	@Path("{user-id}/blog/{blog-id}/subscribe")
 	@GET
-	public synchronized void subscribeToBlog(Long blogId, @Suspended AsyncResponse response) {
+	public synchronized void subscribeToBlog(@PathParam("user-id") Long userId,
+			@PathParam("blog-id") Long blogId, @Suspended AsyncResponse response) {
 
+		_logger.info("does it even get to there");
 		// Add the AsyncResponse to the collection associated with the Blog ID.
-		_responses.put(blogId, response);
 
-	}
+		List<AsyncResponse> listOfResponses = _responses.get(blogId);
+		if (listOfResponses == null) {
+			listOfResponses = new ArrayList<AsyncResponse>();
+		}
 
-	/**
-	 * Notify subscribers every time a new blog entry is posted for a blog
-	 * 
-	 * @POST
-	 * @param blogId
-	 * @param blogEntryId
-	 */
-	@Consumes("application/xml")
-	public synchronized void postBlogEntry(Long blogId, BlogEntry blogEntryId) {
+		listOfResponses.add(response);
+		_responses.put(blogId, listOfResponses);
 
-		// Get the AsyncResponses for clients that have subscribed to the blog
-		// identified by blogId.
-		/*
-		 * List<AsyncResponse> asyncResponses = _responses.remove("blogId");
-		 * 
-		 * for (AsyncResponse clientHandle : asyncResponses) {
-		 * clientHandle.resume(blogEntryId); }
-		 */
 	}
 
 	/**
@@ -239,7 +233,8 @@ public class BlogResource {
 	 */
 	@POST
 	@Consumes("application/xml")
-	public Response createUser(User user) throws ClassNotFoundException, SQLException {
+	public Response createUser(User user) throws ClassNotFoundException,
+			SQLException {
 
 		_entityManager.getTransaction().begin();
 		_logger.info("Read user: " + user);
@@ -264,7 +259,8 @@ public class BlogResource {
 	@POST
 	@Path("{user-id}/blog")
 	@Consumes("application/xml")
-	public Response createBlogForUser(@CookieParam("username") long cookieUserId,
+	public Response createBlogForUser(
+			@CookieParam("username") long cookieUserId,
 			@PathParam("user-id") long id, Blog blog) {
 
 		_entityManager.getTransaction().begin();
@@ -273,7 +269,8 @@ public class BlogResource {
 		_logger.info("Created blog: " + blog);
 		_entityManager.getTransaction().commit();
 
-		return Response.created(URI.create("/users/" + id + "/blog/" + blog.get_id())).build();
+		return Response.created(
+				URI.create("/users/" + id + "/blog/" + blog.get_id())).build();
 
 	}
 
@@ -297,10 +294,25 @@ public class BlogResource {
 		_logger.info("Created blog entry: " + entry);
 		_entityManager.getTransaction().commit();
 
-		return Response
-				.created(URI.create(
-						"/users/" + user_id + "/blog/" + blog_id + "/entry/" + entry.get_id()))
-				.build();
+		if (!_responses.isEmpty()) {
+			Collection<AsyncResponse> asyncResponses = _responses
+					.remove(blog_id);
+
+			_logger.info("hellooooooooo" + asyncResponses.size());
+			for (AsyncResponse response : asyncResponses) {
+				_logger.info("GAGA");
+				response.resume(entry);
+			}
+		}
+		/*
+		 * for (Long key : _responses.keySet()) { if (key.equals(blog_id)){ for
+		 * (AsyncResponse response : _responses.values()) {
+		 * response.resume(entry); } _responses.clear(); } }
+		 */
+
+		return Response.created(
+				URI.create("/users/" + user_id + "/blog/" + blog_id + "/entry/"
+						+ entry.get_id())).build();
 
 	}
 
@@ -317,10 +329,10 @@ public class BlogResource {
 	@Path("{user-id}/blog/{blog-id}/entry/{entry-id}/comments")
 	@Consumes("application/xml")
 	public Response createComment(@PathParam("user-id") long user_id,
-			@PathParam("blog-id") long blog_id, @PathParam("entry-id") long entry_id,
-			Comment comment) {
+			@PathParam("blog-id") long blog_id,
+			@PathParam("entry-id") long entry_id, Comment comment) {
 
-		_logger.info("Read comment " + comment);
+		_logger.info("Read comment: " + comment);
 		_entityManager.getTransaction().begin();
 		BlogEntry entry = _entityManager.find(BlogEntry.class, entry_id);
 		entry.addComment(comment);
@@ -328,9 +340,9 @@ public class BlogResource {
 		_logger.info("Created comment: " + comment);
 		_entityManager.getTransaction().commit();
 
-		return Response.created(URI.create(
-				"/users/" + user_id + "/blog/" + blog_id + "/entry/" + entry_id + "/comments"))
-				.build();
+		return Response.created(
+				URI.create("/users/" + user_id + "/blog/" + blog_id + "/entry/"
+						+ entry_id + "/comments")).build();
 
 	}
 
@@ -357,7 +369,8 @@ public class BlogResource {
 		user.add_to_following(blog);
 		_entityManager.persist(user);
 		_entityManager.getTransaction().commit();
-		return Response.created(URI.create("/users/" + user + "/blog/" + blog_id)).build();
+		return Response.created(
+				URI.create("/users/" + user + "/blog/" + blog_id)).build();
 	}
 
 	/**
@@ -393,7 +406,8 @@ public class BlogResource {
 			throws ClassNotFoundException, SQLException {
 
 		_entityManager.getTransaction().begin();
-		_logger.info("Trying to find user with user id: " + String.valueOf(user_id));
+		_logger.info("Trying to find user with user id: "
+				+ String.valueOf(user_id));
 		User user = _entityManager.find(User.class, user_id);
 		if (user == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
@@ -441,12 +455,13 @@ public class BlogResource {
 	public Response getUsersBlogs(@PathParam("user-id") long user_id) {
 
 		_entityManager.getTransaction().begin();
-		_logger.info(
-				"Trying to find blogs owned by user with user id: " + String.valueOf(user_id));
+		_logger.info("Trying to find blogs owned by user with user id: "
+				+ String.valueOf(user_id));
 		List<Blog> usersBlogsResults = _entityManager
-				.createQuery("SELECT blogs FROM Blog blogs WHERE USER_ID = :user_id",
-						Blog.class)
-				.setParameter("user_id", user_id).getResultList();
+				.createQuery(
+						"SELECT blogs FROM Blog blogs WHERE USER_ID = :user_id",
+						Blog.class).setParameter("user_id", user_id)
+				.getResultList();
 		if (usersBlogsResults.isEmpty()) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		} else {
@@ -456,7 +471,8 @@ public class BlogResource {
 		}
 		_entityManager.getTransaction().commit();
 		Set<Blog> usersBlogs = new HashSet<Blog>(usersBlogsResults);
-		GenericEntity<Set<Blog>> usersBlogsGE = new GenericEntity<Set<Blog>>(usersBlogs) {
+		GenericEntity<Set<Blog>> usersBlogsGE = new GenericEntity<Set<Blog>>(
+				usersBlogs) {
 		};
 		return Response.ok(usersBlogsGE).build();
 	}
@@ -473,10 +489,12 @@ public class BlogResource {
 	@Path("{user-id}/blog/{blog-id}/entry/{entry-id}")
 	@Produces("application/xml")
 	public BlogEntry getBlogEntry(@PathParam("user-id") long user_id,
-			@PathParam("blog-id") long blog_id, @PathParam("entry-id") long entry_id) {
+			@PathParam("blog-id") long blog_id,
+			@PathParam("entry-id") long entry_id) {
 
 		_entityManager.getTransaction().begin();
-		_logger.info("Trying to find blog entry with id: " + String.valueOf(blog_id));
+		_logger.info("Trying to find blog entry with id: "
+				+ String.valueOf(blog_id));
 		BlogEntry entry = _entityManager.find(BlogEntry.class, entry_id);
 		if (entry == null) {
 			// Return a HTTP 404 response if the specified blog entry isn't
@@ -501,11 +519,12 @@ public class BlogResource {
 	@Path("{user-id}/blog/{blog-id}/entry/{entry-id}/comments")
 	@Produces("application/xml")
 	public Set<Comment> getCommentsForEntry(@PathParam("user-id") long user_id,
-			@PathParam("blog-id") long blog_id, @PathParam("entry-id") long entry_id) {
+			@PathParam("blog-id") long blog_id,
+			@PathParam("entry-id") long entry_id) {
 
 		_entityManager.getTransaction().begin();
-		_logger.info(
-				"Trying to find comments for blog entry with id: " + String.valueOf(entry_id));
+		_logger.info("Trying to find comments for blog entry with id: "
+				+ String.valueOf(entry_id));
 
 		BlogEntry entry = _entityManager.find(BlogEntry.class, entry_id);
 		for (Comment c : entry.get_comments()) {
@@ -527,9 +546,11 @@ public class BlogResource {
 	@GET
 	@Path("/blog")
 	@Produces("application/xml")
-	public Response filterBlogsCategory(@QueryParam("category") long category_id,
+	public Response filterBlogsCategory(
+			@QueryParam("category") long category_id,
 			@DefaultValue("0") @QueryParam("start") int start,
-			@DefaultValue("1") @QueryParam("size") int size, @Context UriInfo uriInfo) {
+			@DefaultValue("1") @QueryParam("size") int size,
+			@Context UriInfo uriInfo) {
 
 		URI uri = uriInfo.getAbsolutePath();
 
@@ -539,13 +560,18 @@ public class BlogResource {
 		_entityManager.getTransaction().begin();
 		_logger.info("Trying to find blogs with category id: " + category_id);
 
-		Long dbSize = _entityManager.createQuery(
-				"select count(*) from Blog b RIGHT OUTER JOIN b._category c WHERE c._id = :category_id",
-				Long.class).setParameter("category_id", category_id).getSingleResult();
+		Long dbSize = _entityManager
+				.createQuery(
+						"select count(*) from Blog b RIGHT OUTER JOIN b._category c WHERE c._id = :category_id",
+						Long.class).setParameter("category_id", category_id)
+				.getSingleResult();
 
 		if (start > 0) {
 			// There are previous blogs - create a previous link.
-			previous = Link.fromUri(uri + "?category={category}&start={start}&size={size}")
+			previous = Link
+					.fromUri(
+							uri
+									+ "?category={category}&start={start}&size={size}")
 					.rel("previous").build(category_id, start - 1, size);
 			_logger.info("Previous link" + previous.toString());
 		}
@@ -553,7 +579,10 @@ public class BlogResource {
 		if (start + size <= dbSize) {
 			// There are successive blogs - create a next link.
 			_logger.info("Making next link");
-			next = Link.fromUri(uri + "?category={category}&start={start}&size={size}")
+			next = Link
+					.fromUri(
+							uri
+									+ "?category={category}&start={start}&size={size}")
 					.rel("next").build(category_id, start + 1, size);
 			_logger.info("Next link" + next.toString());
 		}
@@ -561,9 +590,8 @@ public class BlogResource {
 		List<Blog> categoryBlogsResults = _entityManager
 				.createQuery(
 						"SELECT b FROM Blog b RIGHT OUTER JOIN b._category c WHERE c._id = :category_id",
-						Blog.class)
-				.setParameter("category_id", category_id).setFirstResult(start)
-				.setMaxResults(size).getResultList();
+						Blog.class).setParameter("category_id", category_id)
+				.setFirstResult(start).setMaxResults(size).getResultList();
 
 		_logger.info("Found blogs with category id: " + category_id);
 		for (Blog blog : categoryBlogsResults) {
@@ -591,7 +619,8 @@ public class BlogResource {
 	/**
 	 * Delete a user
 	 * 
-	 * @param id	the user to delete's id
+	 * @param id
+	 *            the user to delete's id
 	 */
 	@DELETE
 	@Path("{id}")
@@ -599,8 +628,8 @@ public class BlogResource {
 	public void deleteUser(@PathParam("id") Long id) {
 
 		_logger.info("Trying to remove user with id: " + id);
-		User user = _entityManager.find(User.class, id);
 		_entityManager.getTransaction().begin();
+		User user = _entityManager.find(User.class, id);
 		_entityManager.remove(user);
 		_logger.info("Deleted user with id: " + id);
 		_entityManager.getTransaction().commit();
@@ -609,8 +638,10 @@ public class BlogResource {
 	/**
 	 * Delete a blog
 	 * 
-	 * @param user_id	the person who owns the blog/blog entry
-	 * @param blog_id	the blog id
+	 * @param user_id
+	 *            the person who owns the blog/blog entry
+	 * @param blog_id
+	 *            the blog id
 	 */
 	@DELETE
 	@Path("{user-id}/blog/{blog-id}")
@@ -619,30 +650,34 @@ public class BlogResource {
 			@PathParam("blog-id") long blog_id) {
 
 		_logger.info("Trying to delete blog with id: " + blog_id);
-		Blog blog = _entityManager.find(Blog.class, blog_id);
 		_entityManager.getTransaction().begin();
+		Blog blog = _entityManager.find(Blog.class, blog_id);
 		_entityManager.remove(blog);
 		_logger.info("Deleted blog entry with id: " + blog_id);
 		_entityManager.getTransaction().commit();
 
 	}
-	
+
 	/**
 	 * Delete a blog entry
 	 * 
-	 * @param user_id	the person who owns the blog/blog entry
-	 * @param blog_id	the blog id
-	 * @param entry_id	the entry id to delete
+	 * @param user_id
+	 *            the person who owns the blog/blog entry
+	 * @param blog_id
+	 *            the blog id
+	 * @param entry_id
+	 *            the entry id to delete
 	 */
 	@DELETE
 	@Path("{user-id}/blog/{blog-id}/entry/{entry-id}")
 	@Produces("application/xml")
 	public void deleteBlogEntry(@PathParam("user-id") long user_id,
-			@PathParam("blog-id") long blog_id, @PathParam("entry-id") long entry_id) {
+			@PathParam("blog-id") long blog_id,
+			@PathParam("entry-id") long entry_id) {
 
 		_logger.info("Trying to delete blog entry with id: " + entry_id);
-		BlogEntry entry = _entityManager.find(BlogEntry.class, entry_id);
 		_entityManager.getTransaction().begin();
+		BlogEntry entry = _entityManager.find(BlogEntry.class, entry_id);
 		_entityManager.remove(entry);
 		_logger.info("Deleted blog entry with id: " + entry_id);
 		_entityManager.getTransaction().commit();
