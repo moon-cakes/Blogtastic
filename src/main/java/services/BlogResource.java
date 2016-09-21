@@ -173,7 +173,7 @@ public class BlogResource {
 			return Response.ok(username).build();
 			
 		} catch (ObjectNotFoundException e) {
-
+			_entityManager.getTransaction().commit();
 			_logger.info("User doesn't exist in the database");
 			return null;
 
@@ -402,6 +402,7 @@ public class BlogResource {
 				+ String.valueOf(user_id));
 		User user = _entityManager.find(User.class, user_id);
 		if (user == null) {
+			_entityManager.getTransaction().commit();
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		_logger.info("Found user " + user);
@@ -427,6 +428,7 @@ public class BlogResource {
 		_logger.info("Trying to find blog with id: " + String.valueOf(blog_id));
 		Blog blog = _entityManager.find(Blog.class, blog_id);
 		if (blog == null) {
+			_entityManager.getTransaction().commit();
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		_logger.info("Found blog: " + blog);
@@ -455,6 +457,7 @@ public class BlogResource {
 						Blog.class).setParameter("user_id", user_id)
 				.getResultList();
 		if (usersBlogsResults.isEmpty()) {
+			_entityManager.getTransaction().commit();
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		} else {
 			for (Blog blog : usersBlogsResults) {
@@ -491,6 +494,7 @@ public class BlogResource {
 		if (entry == null) {
 			// Return a HTTP 404 response if the specified blog entry isn't
 			// found.
+			_entityManager.getTransaction().commit();
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		_logger.info("Found blog entry: " + entry);

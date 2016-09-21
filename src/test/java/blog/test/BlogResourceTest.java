@@ -320,7 +320,7 @@ public class BlogResourceTest {
 	/**
 	 * Delete user Simon Cowell
 	 */
-	// @Test
+	@Test
 	public void deleteUser() {
 
 		Response response = _client.target(WEB_SERVICE_URI + "/users/2").request().delete();
@@ -342,38 +342,12 @@ public class BlogResourceTest {
 		}
 	}
 
-	/**
-	 * Delete blog with id 3 "GET_RIGHT's Game Guide to CS:GO"
-	 */
-	// @Test
-	public void deleteBlog() {
-
-		Response response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3").request()
-				.delete();
-		int status = response.getStatus();
-		response.close();
-		if (status != 204) {
-			_logger.error("Failed to delete blog; Web service responsed with: " + status);
-			fail();
-		}
-
-		// check to see if blog "GET_RIGHT'S Game Guide" is deleted
-		response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3").request().get();
-		status = response.getStatus();
-		response.close();
-		if (status != 404) {
-			_logger.error("Expecting a status code of 404 for querying a non-existent blog; "
-					+ "Web service responded with: " + status);
-			fail();
-		}
-
-	}
 
 	/**
 	 * Delete blog entry with id 3 "DE_DUST II Strats", comment associated with
 	 * id 3 should also be deleted
 	 */
-	//@Test
+	@Test
 	public void deleteBlogEntry() {
 
 		Response response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3")

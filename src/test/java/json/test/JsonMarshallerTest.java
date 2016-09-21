@@ -41,7 +41,7 @@ public class JsonMarshallerTest {
 			_client.close();
 	}
 
-	@Test
+	//@Test
 	public void addUser() {
 
 		User user = new User("Jones", "Bob", "BJon123");
