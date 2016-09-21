@@ -7,6 +7,8 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import services.PersistenceManager;
+
 
 @ApplicationPath("/services")
 public class BlogApplication extends Application {
@@ -18,6 +20,8 @@ public class BlogApplication extends Application {
 	   {
 	     singletons.add(new CategoryResource());
 	     singletons.add(new BlogResource());
+	     PersistenceManager pm = PersistenceManager.instance();
+	      singletons.add(pm);
 	     classes.add(CategoryResolver.class);
 	     classes.add(BlogResolver.class);
 	   }

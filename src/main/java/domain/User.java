@@ -42,7 +42,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class User {
 
     @Id 
-    //@GeneratedValue(generator="ID_GENERATOR")
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
@@ -50,8 +49,8 @@ public class User {
     @Column(name="USERNAME", nullable=false, length=30)
     @XmlElement(name="username")
     private String _username;
-    
-    @Column(name="FIRSTNAME", nullable=false, length=30)
+
+	@Column(name="FIRSTNAME", nullable=false, length=30)
     @XmlElement(name="first-name")
     private String _firstname;
     
@@ -71,24 +70,28 @@ public class User {
     	_firstname = firstname;
     	_lastname = lastname;
     	_username = username;
-		//NEXT_ID++;
-		//_xmlId = getClass().getName() + ":" + NEXT_ID;
     }
 
-    
     public User(String lastname, String firstname, Set<Blog> blogs, Set<Blog> following) {
     	_firstname = firstname;
     	_lastname = lastname;
-    	//_blogs = blogs;
     	_following = following;
     }
-	
+
     public Long get_id() {
         return _id;
     }
     
 	public void set_id(long id) {
 		_id = id;
+	}
+	
+    public String get_username() {
+		return _username;
+	}
+
+	public void set_username(String _username) {
+		this._username = _username;
 	}
     
     public String get_firstname() {
@@ -106,14 +109,6 @@ public class User {
     public void set_lastname(String lastname){
     	_lastname = lastname;
     }
-    
-/*    public void addBlog(Blog blog){
-    	_blogs.add(blog);
-    }
-    
-	public Set<Blog> get_blogs() {
-		return Collections.unmodifiableSet(_blogs);
-	}*/
 
 	public Set<Blog> get_following() {
 		return Collections.unmodifiableSet(_following);

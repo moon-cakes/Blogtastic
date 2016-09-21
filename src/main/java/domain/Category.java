@@ -1,23 +1,15 @@
 package domain;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -40,7 +32,6 @@ import org.slf4j.LoggerFactory;
 public class Category {
 
     @Id 
-    //@GeneratedValue(generator="ID_GENERATOR")
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
     @XmlAttribute(name="id")
     private Long _id;
@@ -48,11 +39,6 @@ public class Category {
 	@Column(name="NAME", nullable=false, length=30)
 	@XmlElement(name="name")
 	private String _name;
-    
-/*	@OneToMany(mappedBy = "_category", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-	@XmlElementWrapper(name="blogs")
-	@XmlElement(name="blog")
-	private Set<Blog> _blogs = new HashSet<Blog>();*/
 	
 	protected Category(){
 	}
@@ -62,11 +48,6 @@ public class Category {
 	}
 
 	private static Logger _logger = LoggerFactory.getLogger(Category.class);
-	
-	public void addBlog(Blog blog) {
-		_logger.info("Attempting to add: " + blog.toString());
-		//_blogs.add(blog);
-	}
     
     public Long get_id() {
 		return _id;
@@ -80,23 +61,13 @@ public class Category {
 		return _name;
 	}
 
-/*	public Set<Blog> get_blogs() {
-		return Collections.unmodifiableSet(_blogs);
-	}*/
-	
 	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("Category: ");
-		//buffer.append(_id);
-		//buffer.append("]; ");
 		if(_name != null) {
 			buffer.append(_name);
-			//buffer.append(", ");
 		}
-		/*if(_firstname != null) {
-			buffer.append(_firstname);
-		}*/
 		return buffer.toString();
 	}
 	

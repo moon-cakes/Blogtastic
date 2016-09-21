@@ -9,11 +9,13 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Link;
@@ -38,8 +40,6 @@ public class BlogResourceTest {
 
 	private static String WEB_SERVICE_URI = "http://localhost:10000/services";
 	private Logger _logger = LoggerFactory.getLogger(BlogResourceTest.class);
-	// private EntityManager _entityManager =
-	// PersistenceManager.instance().createEntityManager();
 	private static Client _client;
 
 	@BeforeClass
@@ -49,17 +49,6 @@ public class BlogResourceTest {
 
 	@Before
 	public void reloadServerData() {
-		/*
-		 * Response response = _client .target(WEB_SERVICE_URI).request()
-		 * .put(null); response.close();
-		 */
-
-		// Pause briefly before running any tests. Test addParoleeMovement(),
-		// for example, involves creating a timestamped value (a movement) and
-		// having the Web service compare it with data just generated with
-		// timestamps. Joda's Datetime class has only millisecond precision,
-		// so pause so that test-generated timestamps are actually later than
-		// timestamped values held by the Web service.
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
@@ -67,21 +56,19 @@ public class BlogResourceTest {
 	}
 
 	@AfterClass
-	public static void destroyClient() throws ClassNotFoundException,
-			SQLException {
+	public static void destroyClient() throws ClassNotFoundException, SQLException {
 		_client.close();
 	}
 
 	/**
 	 * Create some categories
 	 */
-
 	@Test
 	public void addCategoy() {
 
 		Category category = new Category("Beauty");
-		Response response = _client.target(WEB_SERVICE_URI + "/categories")
-				.request().post(Entity.xml(category));
+		Response response = _client.target(WEB_SERVICE_URI + "/categories").request()
+				.post(Entity.xml(category));
 		if (response.getStatus() != 201) {
 			fail("Failed to create new category");
 		}
@@ -104,8 +91,8 @@ public class BlogResourceTest {
 	public void addUser() {
 
 		User user = new User("Lin", "Amy", "xlin504");
-		Response response = _client.target(WEB_SERVICE_URI + "/users")
-				.request().post(Entity.xml(user));
+		Response response = _client.target(WEB_SERVICE_URI + "/users").request()
+				.post(Entity.xml(user));
 		if (response.getStatus() != 201) {
 			fail("Failed to create new User");
 		}
@@ -114,8 +101,8 @@ public class BlogResourceTest {
 		response.close();
 		_logger.info("location for newly created user: " + location);
 
-		User userFromService = _client.target(location).request()
-				.accept("application/xml").get(User.class);
+		User userFromService = _client.target(location).request().accept("application/xml")
+				.get(User.class);
 
 		assertEquals(Long.valueOf(6), userFromService.get_id());
 	}
@@ -131,14 +118,14 @@ public class BlogResourceTest {
 
 		simon.set_lastname("Phillip Cowell");
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/2")
-				.request().put(Entity.xml(simon));
+		Response response = _client.target(WEB_SERVICE_URI + "/users/2").request()
+				.put(Entity.xml(simon));
 		if (response.getStatus() != 204)
 			fail("Failed to update CriminalProfile");
 		response.close();
 
-		User simonUpdated = _client.target(WEB_SERVICE_URI + "/users/2")
-				.request().accept("application/xml").get(User.class);
+		User simonUpdated = _client.target(WEB_SERVICE_URI + "/users/2").request()
+				.accept("application/xml").get(User.class);
 
 		assertEquals(simon, simonUpdated);
 	}
@@ -154,13 +141,13 @@ public class BlogResourceTest {
 		User user = _client.target(WEB_SERVICE_URI + "/users/1").request()
 				.accept("application/xml").get(User.class);
 
-		Category cat = _client.target(WEB_SERVICE_URI + "/categories/2")
-				.request().accept("application/xml").get(Category.class);
+		Category cat = _client.target(WEB_SERVICE_URI + "/categories/2").request()
+				.accept("application/xml").get(Category.class);
 
 		Blog blog = new Blog("Betty's Personal Life", user, cat);
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/1/blog")
-				.request().post(Entity.xml(blog));
+		Response response = _client.target(WEB_SERVICE_URI + "/users/1/blog").request()
+				.post(Entity.xml(blog));
 
 		if (response.getStatus() != 201) {
 			fail("Failed to create new blog for user: " + user);
@@ -170,14 +157,13 @@ public class BlogResourceTest {
 		response.close();
 		_logger.info("Location for newly created blog: " + location);
 
-		Blog blogFromService = _client.target(location).request()
-				.accept("application/xml").get(Blog.class);
+		Blog blogFromService = _client.target(location).request().accept("application/xml")
+				.get(Blog.class);
 
 		assertEquals(Long.valueOf(5), blogFromService.get_id());
 
-		Set<Blog> blogsFromService = _client
-				.target(WEB_SERVICE_URI + "/users/1/blog").request()
-				.accept("application/xml").get(new GenericType<Set<Blog>>() {
+		Set<Blog> blogsFromService = _client.target(WEB_SERVICE_URI + "/users/1/blog")
+				.request().accept("application/xml").get(new GenericType<Set<Blog>>() {
 				});
 
 		assertEquals(Long.valueOf(2), Long.valueOf(blogsFromService.size()));
@@ -192,14 +178,13 @@ public class BlogResourceTest {
 
 		String content = "B/c it just is";
 
-		Blog blog = _client.target(WEB_SERVICE_URI + "/users/3/blog/2")
-				.request().accept("application/xml").get(Blog.class);
+		Blog blog = _client.target(WEB_SERVICE_URI + "/users/3/blog/2").request()
+				.accept("application/xml").get(Blog.class);
 
-		BlogEntry entry = new BlogEntry(new DateTime(),
-				"Why Battlefield is Fun", content, blog);
+		BlogEntry entry = new BlogEntry(new DateTime(), "Why Battlefield is Fun", content,
+				blog);
 
-		Response response = _client
-				.target(WEB_SERVICE_URI + "/users/3/blog/2/entry").request()
+		Response response = _client.target(WEB_SERVICE_URI + "/users/3/blog/2/entry").request()
 				.post(Entity.xml(entry));
 
 		if (response.getStatus() != 201) {
@@ -228,17 +213,16 @@ public class BlogResourceTest {
 				"Your mother also makes the best cookies!");
 
 		Response response = _client
-				.target(WEB_SERVICE_URI + "/users/1/blog/1/entry/1/comments")
-				.request().post(Entity.xml(comment));
+				.target(WEB_SERVICE_URI + "/users/1/blog/1/entry/1/comments").request()
+				.post(Entity.xml(comment));
 
 		String location = response.getLocation().toString();
 		response.close();
 		_logger.info("Location for newly created comment: " + location);
 
 		Set<Comment> commentFromService = _client
-				.target(WEB_SERVICE_URI + "/users/1/blog/1/entry/1/comments")
-				.request().accept("application/xml")
-				.get(new GenericType<Set<Comment>>() {
+				.target(WEB_SERVICE_URI + "/users/1/blog/1/entry/1/comments").request()
+				.accept("application/xml").get(new GenericType<Set<Comment>>() {
 				});
 
 		// There should now be two comments
@@ -253,9 +237,8 @@ public class BlogResourceTest {
 	@Test
 	public void getBlogsForCategoryUsingHATEOAS() {
 
-		Response response = _client
-				.target(WEB_SERVICE_URI + "/users/blog?category=3").request()
-				.get();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/blog?category=3")
+				.request().get();
 
 		// Extract links and entity data from the response.
 		Link previous = response.getLink("previous");
@@ -290,11 +273,13 @@ public class BlogResourceTest {
 		// next links to the adjacent blogs.
 		assertEquals(Long.valueOf(1), Long.valueOf(blogs.size()));
 		assertEquals(Long.valueOf(3), Long.valueOf(blogs.get(0).get_id()));
-		assertEquals("<" + WEB_SERVICE_URI
-				+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
+		assertEquals(
+				"<" + WEB_SERVICE_URI
+						+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
 				previous.toString());
-		assertNotNull("<" + WEB_SERVICE_URI
-				+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
+		assertNotNull(
+				"<" + WEB_SERVICE_URI
+						+ "/users/blog?category=3&start=0&size=1>; rel=\"previous\"",
 				next.toString());
 	}
 
@@ -307,8 +292,8 @@ public class BlogResourceTest {
 		User user = _client.target(WEB_SERVICE_URI + "/users/2").request()
 				.accept("application/xml").get(User.class);
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/1/blog/1")
-				.request().post(Entity.xml(user));
+		Response response = _client.target(WEB_SERVICE_URI + "/users/1/blog/1").request()
+				.post(Entity.xml(user));
 
 		int status = response.getStatus();
 		response.close();
@@ -318,35 +303,31 @@ public class BlogResourceTest {
 	 * Test cookies, i.e. Betty Boo is logging into the website, if successful
 	 * store a cookie of her username
 	 */
-	// @Test
+	@Test
 	public void testCookies() {
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/login")
-				.request().cookie("username", "bboo123")
-				.accept("application/xml").get();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/login").request()
+				.cookie("username", "bboo123").accept("application/xml").get();
 
 		int status = response.getStatus();
-		response.close();
+		_logger.info("Status" + status);
 		if (status == 200) {
-			System.out
-					.println("Response: " + response.readEntity(String.class));
-		}
-
+			assertEquals("bboo123", response.readEntity(String.class));
+		} 
+		response.close();
 	}
 
 	/**
 	 * Delete user Simon Cowell
 	 */
-	//@Test
+	// @Test
 	public void deleteUser() {
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/2")
-				.request().delete();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/2").request().delete();
 		int status = response.getStatus();
 		response.close();
 		if (status != 204) {
-			_logger.error("Failed to delete User; Web service responsed with: "
-					+ status);
+			_logger.error("Failed to delete User; Web service responsed with: " + status);
 			fail();
 		}
 
@@ -364,22 +345,20 @@ public class BlogResourceTest {
 	/**
 	 * Delete blog with id 3 "GET_RIGHT's Game Guide to CS:GO"
 	 */
-	//@Test
+	// @Test
 	public void deleteBlog() {
 
-		Response response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3")
-				.request().delete();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3").request()
+				.delete();
 		int status = response.getStatus();
 		response.close();
 		if (status != 204) {
-			_logger.error("Failed to delete blog; Web service responsed with: "
-					+ status);
+			_logger.error("Failed to delete blog; Web service responsed with: " + status);
 			fail();
 		}
 
 		// check to see if blog "GET_RIGHT'S Game Guide" is deleted
-		response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3")
-				.request().get();
+		response = _client.target(WEB_SERVICE_URI + "/users/4/blog/3").request().get();
 		status = response.getStatus();
 		response.close();
 		if (status != 404) {
@@ -394,23 +373,20 @@ public class BlogResourceTest {
 	 * Delete blog entry with id 3 "DE_DUST II Strats", comment associated with
 	 * id 3 should also be deleted
 	 */
-	@Test
+	//@Test
 	public void deleteBlogEntry() {
 
-		Response response = _client
-				.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3").request()
-				.delete();
+		Response response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3")
+				.request().delete();
 		int status = response.getStatus();
 		response.close();
 		if (status != 204) {
-			_logger.error("Failed to delete entry; Web service responsed with: "
-					+ status);
+			_logger.error("Failed to delete entry; Web service responsed with: " + status);
 			fail();
 		}
 
 		// check to see if blog entry "DE_DUST II Strats" is deleted
-		response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3")
-				.request().get();
+		response = _client.target(WEB_SERVICE_URI + "/users/5/blog/4/entry/3").request().get();
 		status = response.getStatus();
 		response.close();
 		if (status != 404) {
@@ -429,43 +405,29 @@ public class BlogResourceTest {
 		_logger.info("Start HERE");
 		final Client client = new ResteasyClientBuilder().build();
 		// Subscribe to blog
-		client.target(WEB_SERVICE_URI + "/users/3/blog/2/subscribe").request()
-				.async().get(new InvocationCallback<BlogEntry>() {
+		client.target(WEB_SERVICE_URI + "/users/3/blog/2/subscribe").request().async()
+				.get(new InvocationCallback<BlogEntry>() {
 
 					@Override
 					public void completed(BlogEntry entry) {
-						_logger.info("Got a new entry " + entry);
-						// Resubscribe to blog
-						client.target(
-								WEB_SERVICE_URI + "/users/3/blog/2/subscribe")
-								.request().async().get(this);
+						_logger.info("User 3 has a new entry: " + entry);
+						//The blog entry should have a value of 3
+						assertEquals(Long.valueOf(3), entry.get_id());
 					}
 
 					@Override
 					public void failed(Throwable t) {
-					}
-
+						 if (t instanceof WebApplicationException) {
+					         WebApplicationException wae = (WebApplicationException)t;
+					         _logger.info("Failed with status " + wae.getResponse().getStatus());
+					      } else if (t instanceof ResponseProcessingException) {
+					         ResponseProcessingException rpe = (ResponseProcessingException)t;
+					         _logger.info("Failed with status:" + rpe.getResponse().getStatus());
+					      } else {
+					         t.printStackTrace();
+					      }
+					   }
 				});
-		
-		/**Post a new blog entry**/
-		String content = "B/c it just sucks";
-
-		Blog blog = _client.target(WEB_SERVICE_URI + "/users/3/blog/2")
-				.request().accept("application/xml").get(Blog.class);
-
-		BlogEntry entry = new BlogEntry(new DateTime(),
-				"Why Team Fortress 2 sucks", content, blog);
-
-		Response response = _client
-				.target(WEB_SERVICE_URI + "/users/3/blog/2/entry").request()
-				.post(Entity.xml(entry));
-
-		int status = response.getStatus();
-		response.close();
-		if (status != 201) {
-			fail("Failed to create new blog entry: " + entry);
-		}
-		
 
 	}
 

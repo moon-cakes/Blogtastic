@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
@@ -29,6 +31,7 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -60,22 +63,13 @@ public class BlogResource {
 
 	private static final Logger _logger = LoggerFactory
 			.getLogger(BlogResource.class);
-	/*
-	 * public static EntityManagerFactory _factory =
-	 * Persistence.createEntityManagerFactory("blogPU");; public static
-	 * EntityManager _entityManager = _factory.createEntityManager();
-	 */
 
 	private EntityManager _entityManager = PersistenceManager.instance()
 			.createEntityManager();
 
-	/*
-	 * protected Map<Long, AsyncResponse> _responses = new HashMap<Long,
-	 * AsyncResponse>();
-	 */
-
-	Map<Long, List<AsyncResponse>> _responses = new HashMap<Long, List<AsyncResponse>>();
-
+	private Map<Long, List<AsyncResponse>> _responses = new HashMap<Long, List<AsyncResponse>>();
+	private Executor executor = Executors.newSingleThreadExecutor();
+	
 	public BlogResource() {
 		reloadDatabase();
 	}
@@ -207,12 +201,11 @@ public class BlogResource {
 	 */
 	@Path("{user-id}/blog/{blog-id}/subscribe")
 	@GET
+	@Produces("application/xml")
 	public synchronized void subscribeToBlog(@PathParam("user-id") Long userId,
 			@PathParam("blog-id") Long blogId, @Suspended AsyncResponse response) {
 
-		_logger.info("does it even get to there");
 		// Add the AsyncResponse to the collection associated with the Blog ID.
-
 		List<AsyncResponse> listOfResponses = _responses.get(blogId);
 		if (listOfResponses == null) {
 			listOfResponses = new ArrayList<AsyncResponse>();
@@ -220,7 +213,7 @@ public class BlogResource {
 
 		listOfResponses.add(response);
 		_responses.put(blogId, listOfResponses);
-
+		_logger.info("_responses: " + _responses.size());
 	}
 
 	/**
@@ -232,13 +225,13 @@ public class BlogResource {
 	 * @throws ClassNotFoundException
 	 */
 	@POST
-	@Consumes("application/xml")
+	@Consumes({"application/xml","application/json"})
+
 	public Response createUser(User user) throws ClassNotFoundException,
 			SQLException {
 
 		_entityManager.getTransaction().begin();
 		_logger.info("Read user: " + user);
-		// persist user to db
 		_entityManager.persist(user);
 		_logger.info("Created user: " + user);
 		_entityManager.getTransaction().commit();
@@ -286,7 +279,7 @@ public class BlogResource {
 	@Path("{user-id}/blog/{blog-id}/entry")
 	@Consumes("application/xml")
 	public Response createBlogEntryForBlog(@PathParam("user-id") long user_id,
-			@PathParam("blog-id") long blog_id, BlogEntry entry) {
+			@PathParam("blog-id") final long blog_id, final BlogEntry entry) {
 
 		_entityManager.getTransaction().begin();
 		_logger.info("Read blog entry: " + entry);
@@ -294,22 +287,23 @@ public class BlogResource {
 		_logger.info("Created blog entry: " + entry);
 		_entityManager.getTransaction().commit();
 
-		if (!_responses.isEmpty()) {
-			Collection<AsyncResponse> asyncResponses = _responses
-					.remove(blog_id);
-
-			_logger.info("hellooooooooo" + asyncResponses.size());
-			for (AsyncResponse response : asyncResponses) {
-				_logger.info("GAGA");
-				response.resume(entry);
-			}
-		}
-		/*
-		 * for (Long key : _responses.keySet()) { if (key.equals(blog_id)){ for
-		 * (AsyncResponse response : _responses.values()) {
-		 * response.resume(entry); } _responses.clear(); } }
-		 */
-
+		executor.execute(new Runnable() {
+		   public void run() {
+		     while (true) {
+		    	  //ticker.await();
+		         synchronized (_responses) {
+		        	 if (!_responses.isEmpty()) {
+		     			Collection<AsyncResponse> asyncResponses = _responses
+		     					.remove(blog_id);
+		     			for (AsyncResponse response : asyncResponses) {
+		     				response.resume(entry);
+		     			}
+		     		}
+		         }
+		      }
+		   }
+		});
+		
 		return Response.created(
 				URI.create("/users/" + user_id + "/blog/" + blog_id + "/entry/"
 						+ entry.get_id())).build();
@@ -384,10 +378,8 @@ public class BlogResource {
 	public void updateUser(User user) {
 
 		_entityManager.getTransaction().begin();
-		User user_to_update = _entityManager.find(User.class, user.get_id());
+		_entityManager.find(User.class, user.get_id());
 		_entityManager.getTransaction().commit();
-		user_to_update.set_firstname(user.get_firstname());
-		user_to_update.set_lastname(user.get_lastname());
 
 	}
 
@@ -401,7 +393,7 @@ public class BlogResource {
 	 */
 	@GET
 	@Path("{user-id}")
-	@Produces("application/xml")
+	@Produces({"application/xml", MediaType.APPLICATION_JSON})
 	public User getUser(@PathParam("user-id") long user_id)
 			throws ClassNotFoundException, SQLException {
 

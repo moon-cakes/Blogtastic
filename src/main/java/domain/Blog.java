@@ -65,20 +65,10 @@ public class Blog {
 	@XmlElement(name="blog-owner")
 	protected User _blogowner;
 	
-/*	// Map the collection of blog entries. The inverse many-to-one relationship is set
-	// up on class blog entries _blog property. It's the BlogEntry's class that is
-	// responsible for the foreign key column introduced by the @ManyToOne relationship.
-	@OneToMany(mappedBy = "_blog", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-	@XmlElementWrapper(name="entries")
-	@XmlElement(name="entry")
-	private Set<BlogEntry> _blogentries = new HashSet<BlogEntry>();*/
-	
 	@ManyToOne(fetch=FetchType.LAZY)
-	//@JoinTable(name="BLOG_CATEGORY", joinColumns = @JoinColumn(name = "BLOG_ID"),
-	//inverseJoinColumns = @JoinColumn(name = "CATEGORY"))
 	@JoinColumn(name="CATEGORY_ID")
 	private Category _category;
-	
+
 	// Define the many-to-many association with user. The association is implemented
 	// using an intermediary join table. Cascading persistence is set so that
 	// whenever a Blog instance is persisted, so are its subscribers.
@@ -131,14 +121,14 @@ public class Blog {
 		return _blogname;
 	}
 	
-    /*public Set<BlogEntry> get_blogentries() {
-		return Collections.unmodifiableSet(_blogentries);
-	}*/
-
-   /* public void addBlogEntry(BlogEntry entry){
-		_blogentries.add(entry);
+	public Category get_category() {
+		return _category;
 	}
-    */
+
+	public void set_category(Category _category) {
+		this._category = _category;
+	}
+	
 	public Set<User> get_subscribers() {
 		return Collections.unmodifiableSet(_subscribers);
 	}
