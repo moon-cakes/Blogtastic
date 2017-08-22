@@ -1,2 +1,2 @@
 # Blogtastic
-A blogging system
+A RESTful API for a blogging service.
